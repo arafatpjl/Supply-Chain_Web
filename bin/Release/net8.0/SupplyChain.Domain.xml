@@ -1,0 +1,2002 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SupplyChain.Domain</name>
+    </assembly>
+    <members>
+        <member name="T:SupplyChain.Domain.Common.Entity">
+            <summary>
+            Base class for all persistent entities, providing identity semantics.
+            </summary>
+            <remarks>
+            The legacy VB6 application had no entity concept at all — rows were passed around as
+            untyped ADO <c>Recordset</c> objects and compared by whichever column the developer
+            happened to pick. Equality here is defined once, by identity.
+            </remarks>
+        </member>
+        <member name="P:SupplyChain.Domain.Common.Entity.Id">
+            <summary>Surrogate primary key, assigned by the database via IDENTITY.</summary>
+            <remarks>
+            This replaces the legacy <c>fncNewID2</c> "SELECT MAX(id) + 1" pattern, which had no
+            locking and produced duplicate keys under concurrent saves. Business-facing document
+            numbers are a separate concern — see <see cref="T:SupplyChain.Domain.ValueObjects.DocumentNumber"/>.
+            </remarks>
+        </member>
+        <member name="P:SupplyChain.Domain.Common.Entity.IsTransient">
+            <summary>A transient entity has not yet been persisted.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Common.Entity.Equals(System.Object)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Domain.Common.Entity.GetHashCode">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Domain.Common.IAuditable">
+            <summary>
+            Marks an entity whose create/modify provenance is recorded automatically.
+            </summary>
+            <remarks>
+            The legacy application set <c>USERID</c>, <c>PCName</c>, <c>EntryDate</c> and
+            <c>EntryTime</c> by hand in <em>every single INSERT statement</em> — several hundred lines
+            of duplicated assignment across the VB6 forms. Implementing this interface delegates all of
+            it to a single EF Core <c>SaveChanges</c> interceptor.
+            </remarks>
+        </member>
+        <member name="P:SupplyChain.Domain.Common.IAuditable.CreatedBy">
+            <summary>User name responsible for creating the record.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Common.IAuditable.CreatedAt">
+            <summary>UTC timestamp of creation.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Common.IAuditable.ModifiedBy">
+            <summary>User name responsible for the most recent modification, if any.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Common.IAuditable.ModifiedAt">
+            <summary>UTC timestamp of the most recent modification, if any.</summary>
+        </member>
+        <member name="T:SupplyChain.Domain.Common.ICompanyScoped">
+            <summary>
+            Marks an entity that belongs to exactly one company (tenant).
+            </summary>
+            <remarks>
+            <para>
+            The legacy system achieved tenancy by keeping <strong>18 separate SQL Server databases</strong>
+            with an identical schema — <c>InventoryPJL</c>, <c>InventoryUJL</c>, <c>InventoryPAL</c> and so
+            on — and switching the connection string at login. Master data was replicated into all of them
+            by executing the same INSERT up to seventeen times in sequence, untransacted.
+            </para>
+            <para>
+            The modern design consolidates those into one database and scopes transactional data by
+            <see cref="P:SupplyChain.Domain.Common.ICompanyScoped.CompanyId"/>. Every entity implementing this interface receives an EF Core global
+            query filter, so tenant isolation is enforced in the data layer and cannot be bypassed by
+            forgetting a WHERE clause. Master data (suppliers, items, parties) is deliberately
+            <em>not</em> company-scoped: it was always logically global.
+            </para>
+            </remarks>
+        </member>
+        <member name="P:SupplyChain.Domain.Common.ICompanyScoped.CompanyId">
+            <summary>Identifier of the owning company.</summary>
+        </member>
+        <member name="T:SupplyChain.Domain.Common.ISoftDeletable">
+            <summary>
+            Marks an entity that is logically, rather than physically, deleted.
+            </summary>
+            <remarks>
+            Preserves the legacy <c>DeleteRow</c> flag found on <c>MRR_Challan_Sub</c>,
+            <c>BillDetails</c> and <c>PO_Sub_Menu</c>. The legacy audit reports
+            (<c>rptMrrEditDeleteInfo</c>, <c>rptChallanEditDeleteInfo</c>, <c>rptPOEditDeleteInfo</c>)
+            depend on deleted rows remaining queryable, so this behaviour must be retained.
+            </remarks>
+        </member>
+        <member name="P:SupplyChain.Domain.Common.ISoftDeletable.IsDeleted">
+            <summary>Whether the record has been logically deleted.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Common.ISoftDeletable.DeletedAt">
+            <summary>UTC timestamp of deletion, if any.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Common.ISoftDeletable.DeletedBy">
+            <summary>User name responsible for the deletion, if any.</summary>
+        </member>
+        <member name="T:SupplyChain.Domain.Common.NamedEntity">
+            <summary>
+            Base class for master-data entities whose identity to a user is a single unique name.
+            </summary>
+            <remarks>
+            <para>
+            Countries, item types, accounts heads, parties and file numbers are all the same shape in the
+            legacy system: a surrogate key plus one name that must be present, bounded, and unique. Each
+            had its own VB6 form repeating the same three checks with slightly different wording, and each
+            was replicated across up to eighteen databases by hand.
+            </para>
+            <para>
+            The maximum length differs per type — 30 characters for countries and item types, 50 for
+            suppliers, 20 for file numbers — so subclasses supply it. Those limits are taken from the
+            legacy forms, which enforced them with a "Maximum size is 'N'" message box.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Domain.Common.NamedEntity.#ctor">
+            <summary>Initialises a new instance. Required by EF Core.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Common.NamedEntity.#ctor(System.String)">
+            <summary>Initialises a new instance with the given name.</summary>
+            <param name="name">The unique name.</param>
+        </member>
+        <member name="P:SupplyChain.Domain.Common.NamedEntity.Name">
+            <summary>The unique, user-facing name.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Common.NamedEntity.CreatedBy">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Common.NamedEntity.CreatedAt">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Common.NamedEntity.ModifiedBy">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Common.NamedEntity.ModifiedAt">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Common.NamedEntity.MaximumNameLength">
+            <summary>
+            The longest permitted name, enforced by both the domain and the database mapping.
+            </summary>
+            <remarks>Mirrors the limit the corresponding legacy form enforced.</remarks>
+        </member>
+        <member name="P:SupplyChain.Domain.Common.NamedEntity.EntityLabel">
+            <summary>The label used in error messages, e.g. "Country".</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Common.NamedEntity.Rename(System.String)">
+            <summary>Changes the name.</summary>
+            <param name="name">The new name.</param>
+            <exception cref="T:SupplyChain.Domain.Exceptions.DomainException">The name is empty or exceeds the permitted length.</exception>
+        </member>
+        <member name="M:SupplyChain.Domain.Common.NamedEntity.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Domain.Entities.Accounts.Bill">
+            <summary>
+            A batch of supplier invoices recorded together under one identification number.
+            </summary>
+            <remarks>
+            <para>
+            Migrated from <c>BillMain</c>. One entity replaces two VB6 forms —
+            <c>frmBillNO</c> and <c>frmBillNOCash</c>, roughly 3,300 lines — whose only functional
+            difference was the single character written to <c>Status</c>.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Accounts.Bill.#ctor(System.Int32,SupplyChain.Domain.ValueObjects.DocumentNumber,System.DateOnly,SupplyChain.Domain.Enums.BillKind,SupplyChain.Domain.Enums.CurrencyCode)">
+            <summary>Initialises a bill.</summary>
+            <param name="companyId">The company recording it.</param>
+            <param name="number">The issued identification number. Legacy column: <c>IDNO</c>.</param>
+            <param name="identificationDate">Legacy column: <c>IDDate</c>.</param>
+            <param name="kind">Cash or credit. Legacy column: <c>Status</c>.</param>
+            <param name="currency">Currency the amounts are recorded in.</param>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.Bill.CompanyId">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.Bill.Number">
+            <summary>The identification number. Legacy column: <c>IDNO</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.Bill.IdentificationDate">
+            <summary>When the batch was identified. Legacy column: <c>IDDate</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.Bill.Kind">
+            <summary>Cash or credit. Legacy column: <c>Status</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.Bill.Currency">
+            <summary>Currency the amounts are recorded in.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.Bill.Lines">
+            <summary>The invoices on this bill. Legacy table: <c>BillDetails</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.Bill.Total">
+            <summary>The total of the invoices, excluding removed lines.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.Bill.IsDeleted">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.Bill.DeletedAt">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.Bill.DeletedBy">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.Bill.CreatedBy">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.Bill.CreatedAt">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.Bill.ModifiedBy">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.Bill.ModifiedAt">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Accounts.Bill.Revise(System.DateOnly,SupplyChain.Domain.Enums.BillKind,SupplyChain.Domain.Enums.CurrencyCode)">
+            <summary>Changes the identification date and kind.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Accounts.Bill.AddLine(System.Int32,System.Int32,System.String,System.DateOnly,System.Decimal,System.String,System.Nullable{System.DateOnly},System.String)">
+            <summary>Adds an invoice line.</summary>
+            <exception cref="T:SupplyChain.Domain.Exceptions.DomainException">The same invoice from the same party is already present.</exception>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Accounts.Bill.ClearLines">
+            <summary>Removes every line, so a revised set can be added.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Accounts.Bill.MarkDeleted">
+            <summary>Marks the bill deleted.</summary>
+        </member>
+        <member name="T:SupplyChain.Domain.Entities.Accounts.BillLine">
+            <summary>
+            One invoice on a bill.
+            </summary>
+            <remarks>
+            Migrated from <c>BillDetails</c>. The party reference is <c>PartyID</c>, confirmed from the
+            source rather than assumed — every live insert uses it, and the single <c>supplierID</c>
+            variant is commented out.
+            </remarks>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.BillLine.BillId">
+            <summary>The bill this line belongs to.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.BillLine.AccountsHeadId">
+            <summary>The accounts head the amount is posted to. Legacy column: <c>HeadID</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.BillLine.PartyId">
+            <summary>The party billed. Legacy column: <c>PartyID</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.BillLine.BillNo">
+            <summary>Invoice number. Legacy column: <c>BillNo</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.BillLine.BillDate">
+            <summary>Invoice date. Legacy column: <c>BillDate</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.BillLine.Amount">
+            <summary>Invoice amount. Legacy column: <c>BillAmount</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.BillLine.MrrNo">
+            <summary>Goods receipt referenced. Legacy column: <c>MRRNO</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.BillLine.MrrDate">
+            <summary>Goods receipt date referenced. Legacy column: <c>MRRDate</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.BillLine.Remarks">
+            <summary>Free-text note. Legacy column: <c>Remarks</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.BillLine.RowNo">
+            <summary>Position on the bill. Legacy column: <c>RowNo</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.BillLine.IsDeleted">
+            <inheritdoc />
+            <remarks>Legacy column: <c>Deleterow</c>, which the cash form left to a default.</remarks>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.BillLine.DeletedAt">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.BillLine.DeletedBy">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Accounts.BillLine.MarkDeleted">
+            <summary>Marks the line removed.</summary>
+        </member>
+        <member name="T:SupplyChain.Domain.Entities.Accounts.Cheque">
+            <summary>
+            One cheque drawn from a cheque book.
+            </summary>
+            <remarks>Migrated from the legacy <c>Cheque_Child_Table</c>.</remarks>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.Cheque.ChequeBookId">
+            <summary>The cheque book this cheque belongs to.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.Cheque.ChequeNo">
+            <summary>Cheque number. Legacy column: <c>ChequeNO</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.Cheque.IssueDate">
+            <summary>When the cheque was issued. Legacy column: <c>IssueDate</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.Cheque.Value">
+            <summary>The cheque amount. Legacy column: <c>ChequeValue</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.Cheque.Beneficiary">
+            <summary>Who the cheque is drawn in favour of. Legacy column: <c>Beneficiary</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.Cheque.PaymentParticulars">
+            <summary>What the payment is for. Legacy column: <c>PaymentParticulars</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.Cheque.EncashmentDate">
+            <summary>
+            When the cheque was honoured, if it has been. Legacy column: <c>EncashmentDate</c>.
+            </summary>
+            <remarks>The legacy form called this the "Honor Date".</remarks>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.Cheque.Remarks">
+            <summary>Free-text note. Legacy column: <c>Remarks</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.Cheque.IsEncashed">
+            <summary>Whether the cheque has been honoured.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.Cheque.IsDeleted">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.Cheque.DeletedAt">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.Cheque.DeletedBy">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Accounts.Cheque.SetEncashmentDate(System.Nullable{System.DateOnly})">
+            <summary>Records when the cheque was honoured.</summary>
+            <exception cref="T:SupplyChain.Domain.Exceptions.DomainException">The honour date is not after the issue date.</exception>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Accounts.Cheque.MarkDeleted">
+            <summary>Marks the cheque removed.</summary>
+        </member>
+        <member name="T:SupplyChain.Domain.Entities.Accounts.ChequeBook">
+            <summary>
+            A cheque book issued by a bank, and the cheques drawn from it.
+            </summary>
+            <remarks>Migrated from the legacy <c>Cheque_Master_Table</c>.</remarks>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Accounts.ChequeBook.#ctor(System.Int32,System.Int32,System.String,System.Int32,System.Int32,SupplyChain.Domain.Enums.CurrencyCode)">
+            <summary>Initialises a cheque book.</summary>
+            <param name="companyId">The company the book belongs to.</param>
+            <param name="bankId">The issuing bank. Legacy column: <c>BankID</c>.</param>
+            <param name="bookNo">The book number. Legacy column: <c>CHQBookNO</c>.</param>
+            <param name="startNo">First cheque number in the book. Legacy column: <c>ChqStartNO</c>.</param>
+            <param name="endNo">Last cheque number in the book. Legacy column: <c>ChqEndNO</c>.</param>
+            <param name="currency">Currency the cheques are drawn in.</param>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.ChequeBook.CompanyId">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.ChequeBook.BankId">
+            <summary>The issuing bank. Legacy column: <c>BankID</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.ChequeBook.BookNo">
+            <summary>The book number. Legacy column: <c>CHQBookNO</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.ChequeBook.StartNo">
+            <summary>First cheque number in the book. Legacy column: <c>ChqStartNO</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.ChequeBook.EndNo">
+            <summary>Last cheque number in the book. Legacy column: <c>ChqEndNO</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.ChequeBook.Prefix">
+            <summary>Optional prefix printed before the number. Legacy column: <c>Prefix</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.ChequeBook.Currency">
+            <summary>Currency the cheques are drawn in.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.ChequeBook.Cheques">
+            <summary>The cheques drawn from this book. Legacy table: <c>Cheque_Child_Table</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.ChequeBook.Capacity">
+            <summary>How many cheques the book holds.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.ChequeBook.UsedCount">
+            <summary>
+            How many cheques have been drawn. Legacy column: <c>UseCheque</c>.
+            </summary>
+            <remarks>
+            Stored in the legacy schema and maintained by hand, so it could disagree with the child
+            rows. Derived here.
+            </remarks>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.ChequeBook.RemainingCount">
+            <summary>How many cheques remain unused.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.ChequeBook.IsDeleted">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.ChequeBook.DeletedAt">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.ChequeBook.DeletedBy">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.ChequeBook.CreatedBy">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.ChequeBook.CreatedAt">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.ChequeBook.ModifiedBy">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Accounts.ChequeBook.ModifiedAt">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Accounts.ChequeBook.SetPrefix(System.String)">
+            <summary>Sets the optional number prefix.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Accounts.ChequeBook.AddCheque(System.String,System.DateOnly,System.Decimal,System.String,System.String,System.Nullable{System.DateOnly},System.String)">
+            <summary>Draws a cheque from the book.</summary>
+            <exception cref="T:SupplyChain.Domain.Exceptions.DomainException">The number is a duplicate or outside the book's range.</exception>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Accounts.ChequeBook.ClearCheques">
+            <summary>Removes every cheque, so a revised set can be added.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Accounts.ChequeBook.MarkDeleted">
+            <summary>Marks the book deleted.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Accounts.ChequeBook.StripPrefix(System.String)">
+            <summary>Strips the book's prefix so the numeric part can be range-checked.</summary>
+        </member>
+        <member name="T:SupplyChain.Domain.Entities.Company">
+            <summary>
+            A company (tenant) whose transactions the system records.
+            </summary>
+            <remarks>
+            <para>
+            Migrated from the legacy <c>Company_Information</c> table. In the legacy system each company
+            also implied a <em>separate physical database</em> — <c>InventoryPJL</c>, <c>InventoryUJL</c>,
+            <c>InventoryPAL</c> and fifteen others. Here a company is an ordinary row, and transactional
+            data is scoped to it through <see cref="T:SupplyChain.Domain.Common.ICompanyScoped"/>.
+            </para>
+            <para>
+            <see cref="P:SupplyChain.Domain.Entities.Company.LegacyDatabaseName"/> is retained so migrated records can be traced back to the
+            database they came from, which matters while the legacy application is still running in
+            parallel.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Company.#ctor(System.String,System.String,System.String)">
+            <summary>Initialises a new company.</summary>
+            <param name="name">Display name, e.g. "Pacific Jeans Ltd.".</param>
+            <param name="shortCode">Short code used in document numbering and navigation, e.g. "PJL".</param>
+            <param name="address">Postal address, printed on report headers.</param>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Company.Name">
+            <summary>Display name. Legacy column: <c>CompName</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Company.ShortCode">
+            <summary>
+            Short code used in navigation and document numbering, e.g. <c>PJL</c>.
+            </summary>
+            <remarks>Derived from the legacy database name, e.g. <c>InventoryPJL</c> becomes <c>PJL</c>.</remarks>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Company.Address">
+            <summary>Postal address, printed on report headers. Legacy column: <c>CompAdd</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Company.LegacyDatabaseName">
+            <summary>
+            Name of the legacy database this company's data was migrated from, e.g. <c>InventoryPJL</c>.
+            </summary>
+            <remarks>
+            Retained for traceability during the parallel-run period. Null for companies created in the
+            new system.
+            </remarks>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Company.IsActive">
+            <summary>Whether the company is currently selectable by users.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Company.CreatedBy">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Company.CreatedAt">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Company.ModifiedBy">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Company.ModifiedAt">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Company.Rename(System.String)">
+            <summary>Changes the display name.</summary>
+            <exception cref="T:SupplyChain.Domain.Exceptions.DomainException">The name is empty.</exception>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Company.SetShortCode(System.String)">
+            <summary>Changes the short code.</summary>
+            <exception cref="T:SupplyChain.Domain.Exceptions.DomainException">The short code is empty or longer than ten characters.</exception>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Company.SetAddress(System.String)">
+            <summary>Updates the postal address.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Company.SetLegacyDatabaseName(System.String)">
+            <summary>Records the legacy database this company was migrated from.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Company.Activate">
+            <summary>Makes the company selectable by users.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Company.Deactivate">
+            <summary>Hides the company from selection without deleting its historical data.</summary>
+        </member>
+        <member name="T:SupplyChain.Domain.Entities.DocumentSequence">
+            <summary>
+            The gap-free counter behind one company's document numbers for a single type and year.
+            </summary>
+            <remarks>
+            <para>
+            Consolidates the four legacy numbering tables — <c>NEW_PI</c>, <c>New_MRR</c>,
+            <c>New_SCID</c> and <c>New_ACCID</c> — which stored the same triple in four places.
+            </para>
+            <para>
+            Allocation must be serialised. The legacy equivalent was
+            <c>SELECT MAX(id) + 1</c> with no lock and no transaction, so two operators saving at the same
+            moment received the same number. Rows of this entity are read under <c>UPDLOCK, HOLDLOCK</c>
+            by the infrastructure allocator so that concurrent callers queue rather than collide.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.DocumentSequence.#ctor(System.Int32,SupplyChain.Domain.Enums.DocumentType,System.Int32,System.Int32)">
+            <summary>Initialises a sequence for the given company, document type and year.</summary>
+            <param name="companyId">The owning company.</param>
+            <param name="type">The kind of document being numbered.</param>
+            <param name="year">The four-digit year.</param>
+            <param name="lastNumber">
+            The highest number already issued. Seeded from the legacy <c>MAX()</c> during migration so
+            numbering continues unbroken from the last number the VB6 application issued.
+            </param>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.DocumentSequence.CompanyId">
+            <summary>The owning company.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.DocumentSequence.Type">
+            <summary>The kind of document being numbered.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.DocumentSequence.Year">
+            <summary>The four-digit year this sequence belongs to.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.DocumentSequence.LastNumber">
+            <summary>The highest number issued so far.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.DocumentSequence.Next">
+            <summary>
+            Issues the next number in the sequence.
+            </summary>
+            <returns>The newly allocated document number.</returns>
+            <remarks>
+            Callers must hold a row lock on this entity for the allocation to be safe. See
+            <c>DocumentNumberAllocator</c> in the Infrastructure layer.
+            </remarks>
+        </member>
+        <member name="T:SupplyChain.Domain.Entities.MasterData.AccountsHead">
+            <summary>
+            An accounts head that bill lines are posted to.
+            </summary>
+            <remarks>
+            Migrated from the legacy <c>AccountsHead</c> table and <c>frmNewAccountsHead.FRM</c>.
+            Referenced by <c>BillDetails.HeadID</c>.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.MasterData.AccountsHead.#ctor(System.String)">
+            <summary>Initialises a new accounts head.</summary>
+            <param name="name">The accounts head name.</param>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.MasterData.AccountsHead.MaximumNameLength">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.MasterData.AccountsHead.EntityLabel">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Domain.Entities.MasterData.Bank">
+            <summary>
+            A bank that cheque books are issued by.
+            </summary>
+            <remarks>
+            Migrated from the legacy <c>New_Bank</c> table, which had no maintenance screen of its own —
+            <c>ModBill.prcAddBank</c> simply read it to fill a combo box. It becomes a master-data entity
+            like the rest, so it can be maintained rather than edited in the database.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.MasterData.Bank.#ctor(System.String)">
+            <summary>Initialises a new bank.</summary>
+            <param name="name">The bank name.</param>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.MasterData.Bank.MaximumNameLength">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.MasterData.Bank.EntityLabel">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Domain.Entities.MasterData.Country">
+            <summary>
+            A country of origin, selectable when recording a supplier.
+            </summary>
+            <remarks>
+            Migrated from the legacy <c>new_Country</c> table and <c>frmNewCountry.frm</c>.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.MasterData.Country.#ctor(System.String)">
+            <summary>Initialises a new country.</summary>
+            <param name="name">The country name.</param>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.MasterData.Country.MaximumNameLength">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.MasterData.Country.EntityLabel">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Domain.Entities.MasterData.Item">
+            <summary>
+            A purchasable item.
+            </summary>
+            <remarks>
+            Migrated from the legacy <c>new_Item_Name</c> table and <c>frmNewItemName.frm</c>.
+            Referenced by purchase order and goods receipt lines.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.MasterData.Item.#ctor(System.String,System.Int32)">
+            <summary>Initialises a new item.</summary>
+            <param name="name">The item name. Legacy column: <c>itemName</c>.</param>
+            <param name="itemTypeId">The classification this item falls under.</param>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.MasterData.Item.ItemTypeId">
+            <summary>The classification this item falls under.</summary>
+            <remarks>
+            The legacy schema stored the item type's <em>name</em> in <c>new_Item_Name.itemType</c>
+            rather than a key, so renaming a type silently orphaned its items. This is a foreign key.
+            </remarks>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.MasterData.Item.ItemType">
+            <summary>The classification this item falls under.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.MasterData.Item.MaximumNameLength">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.MasterData.Item.EntityLabel">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.MasterData.Item.AssignToType(System.Int32)">
+            <summary>Reclassifies the item under a different type.</summary>
+            <exception cref="T:SupplyChain.Domain.Exceptions.DomainException">No type was supplied.</exception>
+        </member>
+        <member name="T:SupplyChain.Domain.Entities.MasterData.ItemType">
+            <summary>
+            A classification grouping items, e.g. "Fabric" or "Trims".
+            </summary>
+            <remarks>
+            Migrated from the legacy <c>new_Item_Type</c> table and <c>frmNewItemType.frm</c>, which the
+            menu labelled "Item Group".
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.MasterData.ItemType.#ctor(System.String,System.String,System.String)">
+            <summary>Initialises a new item type.</summary>
+            <param name="name">The type name. Legacy column: <c>itemType</c>.</param>
+            <param name="group">Optional grouping. Legacy column: <c>itemGroup</c>.</param>
+            <param name="shortName">Optional abbreviation. Legacy column: <c>itemShortName</c>.</param>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.MasterData.ItemType.Group">
+            <summary>Optional higher-level grouping. Legacy column: <c>itemGroup</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.MasterData.ItemType.ShortName">
+            <summary>Optional abbreviation used on reports. Legacy column: <c>itemShortName</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.MasterData.ItemType.Items">
+            <summary>Items classified under this type.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.MasterData.ItemType.MaximumNameLength">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.MasterData.ItemType.EntityLabel">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.MasterData.ItemType.SetGroup(System.String)">
+            <summary>Sets the optional grouping.</summary>
+            <exception cref="T:SupplyChain.Domain.Exceptions.DomainException">The value exceeds 30 characters.</exception>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.MasterData.ItemType.SetShortName(System.String)">
+            <summary>Sets the optional abbreviation.</summary>
+            <exception cref="T:SupplyChain.Domain.Exceptions.DomainException">The value exceeds 20 characters.</exception>
+        </member>
+        <member name="T:SupplyChain.Domain.Entities.MasterData.Party">
+            <summary>
+            A party a bill is raised against.
+            </summary>
+            <remarks>
+            Migrated from the legacy <c>Party</c> table, browsed through <c>frmParty.frm</c> and
+            referenced by <c>BillDetails.PartyID</c>.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.MasterData.Party.#ctor(System.String)">
+            <summary>Initialises a new party.</summary>
+            <param name="name">The party name.</param>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.MasterData.Party.MaximumNameLength">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.MasterData.Party.EntityLabel">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Domain.Entities.MasterData.PfNumber">
+            <summary>
+            A file number ("PF No.") used to group purchasing paperwork.
+            </summary>
+            <remarks>
+            Migrated from the legacy <c>new_PF_No</c> table and <c>frmNewPFNo.frm</c>, which the menu
+            labelled "New File No.". Goods receipts reference it through <c>MRR_Challan_Sub.MainPF</c>.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.MasterData.PfNumber.#ctor(System.String)">
+            <summary>Initialises a new file number.</summary>
+            <param name="number">The file number.</param>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.MasterData.PfNumber.MaximumNameLength">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.MasterData.PfNumber.EntityLabel">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Domain.Entities.MasterData.Supplier">
+            <summary>
+            A supplier goods are purchased from.
+            </summary>
+            <remarks>
+            <para>
+            Migrated from the legacy <c>new_Supplier</c> table and <c>frmNewSupplier.frm</c>. Saving one
+            supplier in the VB6 application executed seventeen sequential INSERT statements, one per
+            company database, hardcoded and untransacted. Here it is a single row.
+            </para>
+            <para>
+            A second supplier master exists in the legacy schema — <c>Supplier_Information</c>, edited
+            through a form captioned "New Party (Bill)" and used by the accounts module. Reconciling the
+            two is deliberately deferred; see <c>docs/03-Database-Migration-Plan.md</c> §5.3.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.MasterData.Supplier.#ctor(System.String,System.String,System.Nullable{System.Int32})">
+            <summary>Initialises a new supplier.</summary>
+            <param name="name">The supplier name. Legacy column: <c>suppName</c>.</param>
+            <param name="address">Postal address. Legacy column: <c>suppAddress</c>.</param>
+            <param name="countryId">Country of origin. Legacy column: <c>suppCountry</c>.</param>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.MasterData.Supplier.Address">
+            <summary>Postal address. Legacy column: <c>suppAddress</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.MasterData.Supplier.CountryId">
+            <summary>Country of origin, if recorded.</summary>
+            <remarks>
+            The legacy schema stored the country's <em>name</em> in <c>new_Supplier.suppCountry</c>
+            rather than a key. This is a nullable foreign key, so renaming a country no longer leaves
+            suppliers pointing at a country that no longer exists under that name.
+            </remarks>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.MasterData.Supplier.Country">
+            <summary>Country of origin, if recorded.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.MasterData.Supplier.MaximumNameLength">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.MasterData.Supplier.EntityLabel">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.MasterData.Supplier.SetAddress(System.String)">
+            <summary>Updates the postal address.</summary>
+            <exception cref="T:SupplyChain.Domain.Exceptions.DomainException">The address exceeds 250 characters.</exception>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.MasterData.Supplier.SetCountry(System.Nullable{System.Int32})">
+            <summary>Sets or clears the country of origin.</summary>
+        </member>
+        <member name="T:SupplyChain.Domain.Entities.Purchasing.PurchaseOrder">
+            <summary>
+            A purchase order placed with a supplier.
+            </summary>
+            <remarks>
+            <para>
+            Migrated from <c>Pro_Inv_Main</c> and <c>Pro_Inv_MainOC</c>, merged into one entity. The screens
+            called this a "Proforma Invoice"; the menu item and the business call it a Purchase Order, and
+            the domain uses the latter.
+            </para>
+            <para>
+            The two legacy tables differed in no way that concerned currency — both stored a currency per
+            line, in identically named columns, and neither held an exchange rate. See
+            <c>docs/analysis/po-currency-variant-diff.md</c>.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Purchasing.PurchaseOrder.#ctor(System.Int32,System.Int32,SupplyChain.Domain.ValueObjects.DocumentNumber,System.DateOnly)">
+            <summary>Initialises a purchase order.</summary>
+            <param name="companyId">The company placing the order.</param>
+            <param name="supplierId">The supplier it is placed with.</param>
+            <param name="number">The issued document number.</param>
+            <param name="orderDate">The order date. Legacy column: <c>PIDate</c>.</param>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Purchasing.PurchaseOrder.CompanyId">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Purchasing.PurchaseOrder.SupplierId">
+            <summary>The supplier the order is placed with. Legacy column: <c>suppID</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Purchasing.PurchaseOrder.Number">
+            <summary>
+            The document number, issued once when the order is created.
+            </summary>
+            <remarks>
+            The foreign-currency form rewrote <c>New_PI</c> on every edit while the local-currency form
+            did not. Neither explains why. A business document number that changes after issue is a
+            defect, so it is issued once and never rewritten.
+            </remarks>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Purchasing.PurchaseOrder.OrderDate">
+            <summary>The order date. Legacy column: <c>PIDate</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Purchasing.PurchaseOrder.FromDate">
+            <summary>
+            Start of the period the order covers, where recorded. Legacy column: <c>FDate</c>.
+            </summary>
+            <remarks>
+            Present only on the foreign-currency table and entered freely by the user. An earlier
+            reading guessed these were exchange-rate validity dates; the forms show no rate at all, so
+            that is wrong. Most likely a delivery window. The meaning is genuinely unknown and is
+            carried forward as-is rather than renamed to something that sounds certain.
+            </remarks>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Purchasing.PurchaseOrder.ToDate">
+            <summary>End of the period the order covers. Legacy column: <c>TDate</c>.</summary>
+            <inheritdoc cref="P:SupplyChain.Domain.Entities.Purchasing.PurchaseOrder.FromDate" />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Purchasing.PurchaseOrder.IsDeleted">
+            <inheritdoc />
+            <remarks>Legacy column: <c>Deleterow</c>.</remarks>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Purchasing.PurchaseOrder.DeletedAt">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Purchasing.PurchaseOrder.DeletedBy">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Purchasing.PurchaseOrder.Lines">
+            <summary>The order lines. Legacy table: <c>Pro_Inv_Sub</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Purchasing.PurchaseOrder.Total">
+            <summary>The order total, summed across its lines.</summary>
+            <exception cref="T:SupplyChain.Domain.Exceptions.DomainException">Lines are recorded in more than one currency.</exception>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Purchasing.PurchaseOrder.CreatedBy">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Purchasing.PurchaseOrder.CreatedAt">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Purchasing.PurchaseOrder.ModifiedBy">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Purchasing.PurchaseOrder.ModifiedAt">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Purchasing.PurchaseOrder.SetPeriod(System.Nullable{System.DateOnly},System.Nullable{System.DateOnly})">
+            <summary>Sets the period the order covers.</summary>
+            <exception cref="T:SupplyChain.Domain.Exceptions.DomainException">The end precedes the start.</exception>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Purchasing.PurchaseOrder.Revise(System.Int32,System.DateOnly)">
+            <summary>Changes the supplier and order date.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Purchasing.PurchaseOrder.AddLine(System.Int32,System.String,System.String,System.Decimal,System.String,SupplyChain.Domain.ValueObjects.Money,System.String)">
+            <summary>Adds a line.</summary>
+            <exception cref="T:SupplyChain.Domain.Exceptions.DomainException">The item is already on the order.</exception>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Purchasing.PurchaseOrder.ClearLines">
+            <summary>Removes every line, so a revised set can be added.</summary>
+            <remarks>
+            Editing an order in the legacy form deleted its lines and reinserted them. That is kept,
+            because line identity is not referenced elsewhere, but it now happens inside the same
+            transaction as the header — which it did not before.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Purchasing.PurchaseOrder.MarkDeleted">
+            <summary>
+            Marks the order deleted.
+            </summary>
+            <remarks>
+            Who deleted it and when are stamped by the audit interceptor, so a deletion carries the
+            same provenance as any other change. The legacy schema recorded only the <c>Deleterow</c>
+            flag, which is why its audit reports could say a row was deleted but not by whom.
+            </remarks>
+        </member>
+        <member name="T:SupplyChain.Domain.Entities.Purchasing.PurchaseOrderLine">
+            <summary>
+            One item on a purchase order.
+            </summary>
+            <remarks>
+            Migrated from <c>Pro_Inv_Sub</c> and <c>Pro_Inv_SubOC</c>, whose column lists were identical.
+            </remarks>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Purchasing.PurchaseOrderLine.PurchaseOrderId">
+            <summary>The purchase order this line belongs to.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Purchasing.PurchaseOrderLine.ItemId">
+            <summary>The item ordered. Legacy column: <c>ItemID</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Purchasing.PurchaseOrderLine.Description">
+            <summary>Free-text description. Legacy column: <c>ItDesc</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Purchasing.PurchaseOrderLine.PrNo">
+            <summary>Purchase requisition number. Legacy column: <c>PRNo</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Purchasing.PurchaseOrderLine.Quantity">
+            <summary>Quantity ordered. Legacy column: <c>PIQty</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Purchasing.PurchaseOrderLine.QtyUnit">
+            <summary>Unit of measure. Legacy column: <c>QtyUnit</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Purchasing.PurchaseOrderLine.UnitPrice">
+            <summary>Price per unit, in the line's currency. Legacy column: <c>UnitPrice</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Purchasing.PurchaseOrderLine.Condition">
+            <summary>Delivery or payment condition. Legacy column: <c>Condition</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Purchasing.PurchaseOrderLine.SerialNo">
+            <summary>Position on the order. Legacy column: <c>SLNO</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Purchasing.PurchaseOrderLine.IsDeleted">
+            <summary>Whether the line has been removed.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Purchasing.PurchaseOrderLine.LineTotal">
+            <summary>
+            Quantity times unit price. Legacy column: <c>ItTotal</c>.
+            </summary>
+            <remarks>
+            The legacy forms stored this, computed in VB and written alongside the inputs, so a rounding
+            difference between the two could persist unnoticed. It is derived here and never stored.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Purchasing.PurchaseOrderLine.MarkDeleted">
+            <summary>Marks the line removed.</summary>
+        </member>
+        <member name="T:SupplyChain.Domain.Entities.Receiving.Mrr">
+            <summary>
+            A goods receipt: what a supplier actually delivered, against a purchase order.
+            </summary>
+            <remarks>
+            <para>
+            Migrated from <c>Mrr_Challan_Main</c> and <c>Mrr_Challan_MainOC</c>, merged into one entity.
+            The two legacy forms — roughly 6,900 lines between them — used identical validation wording and
+            differed in no way that concerned currency; both carried <c>MRRCurr</c> and neither held an
+            exchange rate. See <c>docs/analysis/mrr-currency-variant-diff.md</c>.
+            </para>
+            <para>
+            The core transaction of the system, and the one the legacy application wrote least safely: the
+            header, each line and the approvals were separate untransacted statements.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Receiving.Mrr.#ctor(System.Int32,System.Int32,SupplyChain.Domain.ValueObjects.DocumentNumber,System.DateOnly,SupplyChain.Domain.Enums.CurrencyCode)">
+            <summary>Initialises a goods receipt.</summary>
+            <param name="companyId">The company receiving the goods.</param>
+            <param name="supplierId">The supplier that delivered them.</param>
+            <param name="number">The issued document number.</param>
+            <param name="receiptDate">When the goods were received. Legacy column: <c>MRRDate</c>.</param>
+            <param name="currency">Currency the receipt is valued in. Legacy column: <c>MRRCurr</c>.</param>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.Mrr.CompanyId">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.Mrr.SupplierId">
+            <summary>The supplier that delivered. Legacy column: <c>suppID</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.Mrr.Number">
+            <summary>The document number, issued once at creation.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.Mrr.ReceiptDate">
+            <summary>When the goods were received. Legacy column: <c>MRRDate</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.Mrr.Currency">
+            <summary>Currency the receipt is valued in. Legacy column: <c>MRRCurr</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.Mrr.Charges">
+            <summary>
+            Charges added to the receipt value. Legacy column: <c>MRRCharge</c>.
+            </summary>
+            <remarks>
+            Unlike the purchase order form — whose charge and discount boxes were formatted on screen
+            and never saved — these columns are genuinely persisted here, so they migrate.
+            </remarks>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.Mrr.Discount">
+            <summary>Discount deducted from the receipt value. Legacy column: <c>MRRDiscount</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.Mrr.Approval">
+            <summary>The five sign-offs. Legacy table: <c>Signature</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.Mrr.IsDeleted">
+            <inheritdoc />
+            <remarks>Legacy column: <c>DeleteRow</c>.</remarks>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.Mrr.DeletedAt">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.Mrr.DeletedBy">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.Mrr.CreatedBy">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.Mrr.CreatedAt">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.Mrr.ModifiedBy">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.Mrr.ModifiedAt">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.Mrr.Lines">
+            <summary>The lines received. Legacy table: <c>MRR_Challan_Sub</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.Mrr.GoodsValue">
+            <summary>
+            The value of the goods received, before charges and discount.
+            </summary>
+            <remarks>
+            Legacy column: <c>MRRValue</c>, which was stored. Derived here for the same reason line
+            totals are: a stored total can drift from the values that produce it.
+            </remarks>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.Mrr.Total">
+            <summary>The receipt total: goods value plus charges, less discount.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Receiving.Mrr.SetChargesAndDiscount(System.Decimal,System.Decimal)">
+            <summary>Sets charges and discount.</summary>
+            <exception cref="T:SupplyChain.Domain.Exceptions.DomainException">Either value is negative.</exception>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Receiving.Mrr.Approve(SupplyChain.Domain.Entities.Receiving.MrrApproval)">
+            <summary>Records the five sign-offs.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Receiving.Mrr.Revise(System.Int32,System.DateOnly,SupplyChain.Domain.Enums.CurrencyCode)">
+            <summary>Changes the supplier, date and currency.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Receiving.Mrr.AddLine(System.Int32,System.Nullable{System.Int32},System.String,System.String,System.String,System.Decimal,System.Decimal,System.String,SupplyChain.Domain.ValueObjects.Money,System.String,System.DateOnly,System.String,System.String,System.String)">
+            <summary>Adds a received line.</summary>
+            <exception cref="T:SupplyChain.Domain.Exceptions.DomainException">The same item and requisition are already on the receipt.</exception>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Receiving.Mrr.ClearLines">
+            <summary>Removes every line, so a revised set can be added.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Receiving.Mrr.MarkDeleted">
+            <summary>Marks the receipt deleted.</summary>
+        </member>
+        <member name="T:SupplyChain.Domain.Entities.Receiving.MrrApproval">
+            <summary>
+            The five sign-offs recorded against a goods receipt.
+            </summary>
+            <remarks>
+            Migrated from the legacy <c>Signature</c> table. Each role was entered as an employee code and
+            checked against <c>InfoEmp</c>, with "Sorry,Check Your Employee Code" when it did not match.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Receiving.MrrApproval.#ctor(System.String,System.String,System.String,System.String,System.String)">
+            <summary>Records the five approvals.</summary>
+            <param name="qualityCertifiedBy">Legacy column: <c>QualityID</c>.</param>
+            <param name="preparedBy">Legacy column: <c>PreparedID</c>.</param>
+            <param name="quantityCheckedBy">Legacy column: <c>QuantityID</c>.</param>
+            <param name="managerBy">Legacy column: <c>ManagerID</c>.</param>
+            <param name="seniorManagerBy">Legacy column: <c>SRManagerID</c>.</param>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.MrrApproval.MrrId">
+            <summary>The goods receipt these approvals belong to.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.MrrApproval.QualityCertifiedBy">
+            <summary>Employee code certifying quality. Legacy column: <c>QualityID</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.MrrApproval.PreparedBy">
+            <summary>Employee code that prepared the receipt. Legacy column: <c>PreparedID</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.MrrApproval.QuantityCheckedBy">
+            <summary>Employee code that checked quantity. Legacy column: <c>QuantityID</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.MrrApproval.ManagerBy">
+            <summary>Employee code of the approving manager. Legacy column: <c>ManagerID</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.MrrApproval.SeniorManagerBy">
+            <summary>Employee code of the senior manager. Legacy column: <c>SRManagerID</c>.</summary>
+        </member>
+        <member name="T:SupplyChain.Domain.Entities.Receiving.MrrLine">
+            <summary>
+            One item received on a goods receipt.
+            </summary>
+            <remarks>
+            Migrated from <c>MRR_Challan_Sub</c> and <c>MRR_Challan_SubOC</c>, merged. Deleting a line on
+            the foreign-currency form wrote to the <em>local-currency</em> table; merging removes that
+            entire class of error. See <c>docs/analysis/mrr-currency-variant-diff.md</c>.
+            </remarks>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.MrrLine.MrrId">
+            <summary>The goods receipt this line belongs to.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.MrrLine.ItemId">
+            <summary>The item received. Legacy column: <c>ItemID</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.MrrLine.PurchaseOrderId">
+            <summary>The purchase order line this fulfils, where one is named. Legacy column: <c>PIID</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.MrrLine.Description">
+            <summary>Free-text description. Legacy column: <c>ItDesc</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.MrrLine.MaterialCode">
+            <summary>Material code. Legacy column: <c>MatCode</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.MrrLine.PrNo">
+            <summary>Purchase requisition number. Legacy column: <c>PRNO</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.MrrLine.OrderedQty">
+            <summary>Quantity the receipt was raised against. Legacy column: <c>MRRQty</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.MrrLine.ReceivedQty">
+            <summary>
+            Quantity actually received. Legacy column: <c>RcvdQty</c>.
+            </summary>
+            <remarks>
+            The difference between this and <see cref="P:SupplyChain.Domain.Entities.Receiving.MrrLine.OrderedQty"/> is what the purchase order balance
+            report reconciles.
+            </remarks>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.MrrLine.QtyUnit">
+            <summary>Unit of measure. Legacy column: <c>QtyUnit</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.MrrLine.UnitPrice">
+            <summary>Price per unit. Legacy column: <c>UnitPrice</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.MrrLine.ChallanNo">
+            <summary>Challan number. Legacy column: <c>ChallanNo</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.MrrLine.ChallanDate">
+            <summary>Challan date. Legacy column: <c>ChallanDate</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.MrrLine.MainPf">
+            <summary>File number the receipt is filed under. Legacy column: <c>MainPF</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.MrrLine.ContainerNo">
+            <summary>Container the goods arrived in. Legacy column: <c>Containerno</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.MrrLine.Remarks">
+            <summary>Free-text note. Legacy column: <c>Remarks</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.MrrLine.SerialNo">
+            <summary>Position on the receipt. Legacy column: <c>slno</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.MrrLine.IsDeleted">
+            <inheritdoc />
+            <remarks>Legacy column: <c>DeleteRow</c>.</remarks>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.MrrLine.DeletedAt">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.MrrLine.DeletedBy">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Receiving.MrrLine.LineTotal">
+            <summary>
+            Received quantity times unit price. Legacy column: <c>ItTotal</c>.
+            </summary>
+            <remarks>
+            Derived rather than stored, as on purchase order lines. The legacy schema held it beside
+            the values that produce it.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Receiving.MrrLine.MarkDeleted">
+            <summary>Marks the line removed.</summary>
+        </member>
+        <member name="T:SupplyChain.Domain.Entities.Statements.CashCreditStatement">
+            <summary>
+            One line of the cash-and-credit statement: a payment or liability recorded against a supplier.
+            </summary>
+            <remarks>
+            <para>
+            Migrated from the legacy <c>Statement_of_Cash_and_Credit</c> table, which every Wave 3 report
+            reads through the <c>viewStatement_Cash_Credit</c> view.
+            </para>
+            <para>
+            <strong>This is the first company-scoped entity in the codebase.</strong> Implementing
+            <see cref="T:SupplyChain.Domain.Common.ICompanyScoped"/> is all it takes to be filtered — the DbContext applies the tenant
+            filter by convention, and the isolation tests in this wave prove it.
+            </para>
+            <para>
+            Wave 3 built this read-only, because the reports needed it before the entry screen did. The
+            write path arrives in Wave 9, migrated from <c>frmStatementCheque.frm</c> — the last screen in
+            the system that wrote to a table this application only read.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Statements.CashCreditStatement.#ctor(System.Int32,System.Int32,System.Int32,SupplyChain.Domain.Enums.TransactionType,System.DateOnly,SupplyChain.Domain.ValueObjects.Money)">
+            <summary>Initialises a statement line.</summary>
+            <param name="companyId">The company the entry belongs to. Legacy column: <c>CompanyID</c>.</param>
+            <param name="transactionNo">Sequence within the statement. Legacy column: <c>Tr_No</c>.</param>
+            <param name="statementNo">The statement this line belongs to. Legacy column: <c>StatementNo</c>.</param>
+            <param name="type">How the entry was settled. Legacy column: <c>Tran_Type</c>.</param>
+            <param name="transactionDate">When it was recorded. Legacy column: <c>Tran_Date</c>.</param>
+            <param name="amount">The value of the entry. Legacy column: <c>Amount</c>.</param>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Statements.CashCreditStatement.CompanyId">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Statements.CashCreditStatement.TransactionNo">
+            <summary>Sequence within the statement. Legacy column: <c>Tr_No</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Statements.CashCreditStatement.StatementNo">
+            <summary>The statement this line belongs to. Legacy column: <c>StatementNo</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Statements.CashCreditStatement.SerialNo">
+            <summary>Line number within the statement. Legacy column: <c>Sl_No</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Statements.CashCreditStatement.Type">
+            <summary>How the entry was settled. Legacy column: <c>Tran_Type</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Statements.CashCreditStatement.TransactionDate">
+            <summary>When the entry was recorded. Legacy column: <c>Tran_Date</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Statements.CashCreditStatement.Amount">
+            <summary>The value of the entry. Legacy column: <c>Amount</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Statements.CashCreditStatement.SupplierId">
+            <summary>The supplier this entry concerns, if recorded.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Statements.CashCreditStatement.PartyName">
+            <summary>
+            The party name as written on the entry. Legacy column: <c>NameOfTheParty</c>.
+            </summary>
+            <remarks>
+            Kept as recorded rather than resolved through <see cref="P:SupplyChain.Domain.Entities.Statements.CashCreditStatement.SupplierId"/>. The legacy rows
+            carry a free-text name that does not always match a supplier master row, and a statement
+            must reproduce what was actually recorded at the time.
+            </remarks>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Statements.CashCreditStatement.BillNo">
+            <summary>Bill number referenced by the entry. Legacy column: <c>BillNo</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Statements.CashCreditStatement.BillDate">
+            <summary>Bill date referenced by the entry. Legacy column: <c>BillDate</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Statements.CashCreditStatement.MrrNo">
+            <summary>Goods receipt number referenced by the entry. Legacy column: <c>MRRNo</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Statements.CashCreditStatement.MrrDate">
+            <summary>Goods receipt date referenced by the entry. Legacy column: <c>MRRDate</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Statements.CashCreditStatement.ChallanNo">
+            <summary>Challan number referenced by the entry. Legacy column: <c>Chalan_No</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Statements.CashCreditStatement.ChallanDate">
+            <summary>Challan date referenced by the entry. Legacy column: <c>Chalan_Date</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Statements.CashCreditStatement.Remark">
+            <summary>Free-text note. Legacy column: <c>Remark</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Statements.CashCreditStatement.Status">
+            <summary>
+            Whether the line is live, deleted or superseded. Legacy column: <c>Deleterow</c>.
+            </summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Statements.CashCreditStatement.IsDeleted">
+            <inheritdoc />
+            <remarks>
+            Kept in step with <see cref="P:SupplyChain.Domain.Entities.Statements.CashCreditStatement.Status"/> by this entity, and never set directly. It exists
+            so the tenant-and-soft-delete convention in the DbContext can filter these rows the same
+            way it filters every other entity — one filter per type, applied automatically. The
+            three-state <see cref="P:SupplyChain.Domain.Entities.Statements.CashCreditStatement.Status"/> carries the meaning; this carries the filter.
+            </remarks>
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Statements.CashCreditStatement.DeletedAt">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Statements.CashCreditStatement.DeletedBy">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Statements.CashCreditStatement.CreatedBy">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Statements.CashCreditStatement.CreatedAt">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Statements.CashCreditStatement.ModifiedBy">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Domain.Entities.Statements.CashCreditStatement.ModifiedAt">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Statements.CashCreditStatement.WithReferences(System.Int32,System.Nullable{System.Int32},System.String,System.String,System.Nullable{System.DateOnly},System.String,System.Nullable{System.DateOnly},System.String,System.Nullable{System.DateOnly},System.String)">
+            <summary>Records the documents this entry refers to.</summary>
+            <returns>The same instance, so construction reads as one expression.</returns>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Statements.CashCreditStatement.Revise(SupplyChain.Domain.Enums.TransactionType,System.DateOnly,SupplyChain.Domain.ValueObjects.Money)">
+            <summary>Changes the entry's own details.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Statements.CashCreditStatement.MarkDeleted">
+            <summary>Marks the entry deleted by a user. Legacy value: <c>Deleterow = 1</c>.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Entities.Statements.CashCreditStatement.MarkSuperseded">
+            <summary>
+            Marks the entry replaced by an edit. Legacy value: <c>Deleterow = 2</c>.
+            </summary>
+            <remarks>
+            Editing a statement in the legacy form flagged every existing line this way and inserted a
+            fresh set, so the previous version stayed queryable. That behaviour is kept: a superseded
+            line is history, not a mistake.
+            </remarks>
+        </member>
+        <member name="T:SupplyChain.Domain.Enums.BillKind">
+            <summary>
+            Whether a bill was settled in cash or on credit.
+            </summary>
+            <remarks>
+            Replaces the legacy <c>BillMain.Status</c> column, which held a single character. Two separate
+            1,500-line forms existed to write the two values: <c>frmBillNO</c> wrote <c>'C'</c> and
+            <c>frmBillNOCash</c> wrote <c>'A'</c>, and were otherwise the same form. See
+            <c>docs/analysis/bill-cash-credit-variant-diff.md</c>.
+            </remarks>
+        </member>
+        <member name="F:SupplyChain.Domain.Enums.BillKind.Cash">
+            <summary>Settled in cash. Legacy value: <c>Status = 'A'</c>.</summary>
+        </member>
+        <member name="F:SupplyChain.Domain.Enums.BillKind.Credit">
+            <summary>Settled on credit. Legacy value: <c>Status = 'C'</c>.</summary>
+        </member>
+        <member name="T:SupplyChain.Domain.Enums.CurrencyCode">
+            <summary>
+            ISO 4217 currency codes in use across the system.
+            </summary>
+            <remarks>
+            <para>
+            The legacy database expressed currency <em>structurally</em>: every transactional table was
+            duplicated into a parallel "other currency" table — <c>Pro_Inv_Main</c> alongside
+            <c>Pro_Inv_MainOC</c>, <c>Mrr_Challan_Sub</c> alongside <c>Mrr_Challan_SubOC</c> — with two
+            near-identical VB6 forms behind each pair, roughly 85% duplicated code.
+            </para>
+            <para>
+            This was redundant even in the legacy schema, which already carried a <c>Currency</c> column
+            on <c>Pro_Inv_Sub</c> and an <c>MRRCurr</c> column on <c>Mrr_Challan_Main</c>. Making currency
+            a value rather than a table collapses both pairs and removes roughly 4,000 lines of duplicated
+            form code.
+            </para>
+            </remarks>
+        </member>
+        <member name="F:SupplyChain.Domain.Enums.CurrencyCode.BDT">
+            <summary>Bangladeshi Taka — the base currency of the business.</summary>
+        </member>
+        <member name="F:SupplyChain.Domain.Enums.CurrencyCode.USD">
+            <summary>United States Dollar.</summary>
+        </member>
+        <member name="F:SupplyChain.Domain.Enums.CurrencyCode.EUR">
+            <summary>Euro.</summary>
+        </member>
+        <member name="F:SupplyChain.Domain.Enums.CurrencyCode.GBP">
+            <summary>Pound Sterling.</summary>
+        </member>
+        <member name="F:SupplyChain.Domain.Enums.CurrencyCode.JPY">
+            <summary>Japanese Yen.</summary>
+        </member>
+        <member name="F:SupplyChain.Domain.Enums.CurrencyCode.CNY">
+            <summary>Chinese Yuan Renminbi.</summary>
+        </member>
+        <member name="F:SupplyChain.Domain.Enums.CurrencyCode.INR">
+            <summary>Indian Rupee.</summary>
+        </member>
+        <member name="T:SupplyChain.Domain.Enums.DocumentType">
+            <summary>
+            Types of business document that carry a user-facing, gap-free sequence number.
+            </summary>
+            <remarks>
+            Each corresponds to one legacy numbering table: <c>NEW_PI</c>, <c>New_MRR</c>,
+            <c>New_SCID</c> and <c>New_ACCID</c>. Each of those stored the same triple —
+            a sequence number, a year, and a pre-formatted display string.
+            </remarks>
+        </member>
+        <member name="F:SupplyChain.Domain.Enums.DocumentType.PurchaseOrder">
+            <summary>Purchase order. Legacy table: <c>NEW_PI</c> (labelled "Proforma Invoice" in the UI).</summary>
+        </member>
+        <member name="F:SupplyChain.Domain.Enums.DocumentType.Mrr">
+            <summary>Material receiving report. Legacy table: <c>New_MRR</c>.</summary>
+        </member>
+        <member name="F:SupplyChain.Domain.Enums.DocumentType.Statement">
+            <summary>Cash/credit statement. Legacy table: <c>New_SCID</c>.</summary>
+        </member>
+        <member name="F:SupplyChain.Domain.Enums.DocumentType.AccountsBill">
+            <summary>Accounts bill. Legacy table: <c>New_ACCID</c>.</summary>
+        </member>
+        <member name="T:SupplyChain.Domain.Enums.StatementStatus">
+            <summary>
+            The state of a cash-and-credit statement line.
+            </summary>
+            <remarks>
+            <para>
+            Replaces the legacy <c>Statement_of_Cash_and_Credit.Deleterow</c> column, which looks like a
+            boolean and is not. Both statement forms write three distinct values, and they mean different
+            things:
+            </para>
+            <list type="bullet">
+              <item><description><c>0</c> — live.</description></item>
+              <item><description><c>1</c> — deleted by a user.</description></item>
+              <item><description><c>2</c> — replaced when a statement was edited and reinserted.</description></item>
+            </list>
+            <para>
+            Collapsing all three into one boolean would lose the distinction between a line someone chose
+            to remove and a line the system replaced on their behalf — which is exactly what an audit trail
+            is asked about.
+            </para>
+            </remarks>
+        </member>
+        <member name="F:SupplyChain.Domain.Enums.StatementStatus.Active">
+            <summary>Live. Legacy value: <c>Deleterow = 0</c>.</summary>
+        </member>
+        <member name="F:SupplyChain.Domain.Enums.StatementStatus.Deleted">
+            <summary>Deleted by a user. Legacy value: <c>Deleterow = 1</c>.</summary>
+        </member>
+        <member name="F:SupplyChain.Domain.Enums.StatementStatus.Superseded">
+            <summary>Replaced when the statement was edited. Legacy value: <c>Deleterow = 2</c>.</summary>
+        </member>
+        <member name="T:SupplyChain.Domain.Enums.TransactionType">
+            <summary>
+            Classifies a cash-and-credit statement entry.
+            </summary>
+            <remarks>
+            <para>
+            Replaces the legacy <c>Statement_of_Cash_and_Credit.Tran_Type</c> string column, which was
+            compared against bare literals scattered through the VB6 forms.
+            </para>
+            <para>
+            Wave 0 modelled only Cash and Credit, from the table's name. Reading the report forms in
+            Wave 3 showed the column carries four values: <c>frmrptTransactionWiseReport</c> and
+            <c>frmrptMonthlyStatement</c> both populate their filter with "Cash", "Credit", "Cheque" and
+            "Cash Cheque".
+            </para>
+            </remarks>
+        </member>
+        <member name="F:SupplyChain.Domain.Enums.TransactionType.Cash">
+            <summary>Settled immediately in cash. Legacy value: <c>Cash</c>.</summary>
+        </member>
+        <member name="F:SupplyChain.Domain.Enums.TransactionType.Credit">
+            <summary>Settled on credit terms. Legacy value: <c>Credit</c>.</summary>
+        </member>
+        <member name="F:SupplyChain.Domain.Enums.TransactionType.Cheque">
+            <summary>Settled by cheque. Legacy value: <c>Cheque</c>.</summary>
+        </member>
+        <member name="F:SupplyChain.Domain.Enums.TransactionType.CashCheque">
+            <summary>Settled by a cheque drawn for cash. Legacy value: <c>Cash Cheque</c>.</summary>
+        </member>
+        <member name="T:SupplyChain.Domain.Exceptions.DomainException">
+            <summary>
+            Raised when an operation would violate a domain invariant.
+            </summary>
+            <remarks>
+            Distinct from validation failure: validation rejects bad <em>input</em> before it reaches the
+            domain, whereas this signals that the domain model itself was asked to enter an impossible
+            state. The legacy application expressed both cases as <c>MsgBox</c> calls inside form
+            code-behind, which made them impossible to test.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Domain.Exceptions.DomainException.#ctor(System.String)">
+            <summary>Initialises a new instance with the specified message.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Exceptions.DomainException.#ctor(System.String,System.Exception)">
+            <summary>Initialises a new instance with the specified message and inner exception.</summary>
+        </member>
+        <member name="T:SupplyChain.Domain.Interfaces.IBankRepository">
+            <summary>Access to banks. Legacy table: <c>New_Bank</c>.</summary>
+        </member>
+        <member name="T:SupplyChain.Domain.Interfaces.IBillRepository">
+            <summary>Access to bills. Legacy tables: <c>BillMain</c> and <c>BillDetails</c>.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.IBillRepository.GetWithLinesAsync(System.Int32,System.Threading.CancellationToken)">
+            <summary>Retrieves one bill with its lines loaded.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.IBillRepository.SearchAsync(System.String,System.Nullable{System.Int32},System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <summary>Returns one page of bills, newest first.</summary>
+        </member>
+        <member name="T:SupplyChain.Domain.Interfaces.IChequeBookRepository">
+            <summary>Access to cheque books. Legacy tables: <c>Cheque_Master_Table</c> and <c>Cheque_Child_Table</c>.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.IChequeBookRepository.GetWithChequesAsync(System.Int32,System.Threading.CancellationToken)">
+            <summary>Retrieves one book with its cheques loaded.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.IChequeBookRepository.SearchAsync(System.String,System.Nullable{System.Int32},System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <summary>Returns one page of cheque books.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.IChequeBookRepository.BookNumberExistsAsync(System.Int32,System.String,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <summary>Whether a book number is already in use within the company.</summary>
+        </member>
+        <member name="T:SupplyChain.Domain.Interfaces.ICashCreditStatementRepository">
+            <summary>Access to cash-and-credit statements. Legacy table: <c>Statement_of_Cash_and_Credit</c>.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.ICashCreditStatementRepository.GetStatementAsync(System.Int32,SupplyChain.Domain.Enums.TransactionType,System.DateOnly,System.Threading.CancellationToken)">
+            <summary>Returns every live line of one statement, in entry order.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.ICashCreditStatementRepository.SearchAsync(System.String,System.Nullable{SupplyChain.Domain.Enums.TransactionType},System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <summary>Returns one page of statements, summarised by their heading values.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.ICashCreditStatementRepository.BillNoExistsAsync(System.String,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <summary>Whether an invoice number already appears on a live statement line.</summary>
+            <remarks>The legacy form refused this with "Duplicate Bill Number".</remarks>
+        </member>
+        <member name="T:SupplyChain.Domain.Interfaces.StatementHeading">
+            <summary>The identifying values a statement's lines share.</summary>
+            <param name="StatementNo">The statement number.</param>
+            <param name="Type">How the entries were settled.</param>
+            <param name="TransactionDate">When they were recorded.</param>
+            <param name="LineCount">How many live lines it has.</param>
+            <param name="Total">Their total value.</param>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.StatementHeading.#ctor(System.Int32,SupplyChain.Domain.Enums.TransactionType,System.DateOnly,System.Int32,System.Decimal)">
+            <summary>The identifying values a statement's lines share.</summary>
+            <param name="StatementNo">The statement number.</param>
+            <param name="Type">How the entries were settled.</param>
+            <param name="TransactionDate">When they were recorded.</param>
+            <param name="LineCount">How many live lines it has.</param>
+            <param name="Total">Their total value.</param>
+        </member>
+        <member name="P:SupplyChain.Domain.Interfaces.StatementHeading.StatementNo">
+            <summary>The statement number.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Interfaces.StatementHeading.Type">
+            <summary>How the entries were settled.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Interfaces.StatementHeading.TransactionDate">
+            <summary>When they were recorded.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Interfaces.StatementHeading.LineCount">
+            <summary>How many live lines it has.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Interfaces.StatementHeading.Total">
+            <summary>Their total value.</summary>
+        </member>
+        <member name="T:SupplyChain.Domain.Interfaces.ICompanyRepository">
+            <summary>
+            Access to companies (tenants).
+            </summary>
+            <remarks>
+            Companies are not themselves company-scoped, so this repository is not subject to the tenant
+            query filter. Restricting <em>which</em> companies a given user may see is an authorisation
+            concern, handled through <c>UserCompanyAccess</c>.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.ICompanyRepository.GetByShortCodeAsync(System.String,System.Threading.CancellationToken)">
+            <summary>Retrieves a company by its short code, or <c>null</c> if none matches.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.ICompanyRepository.ListActiveAsync(System.Threading.CancellationToken)">
+            <summary>Retrieves all active companies, ordered by name.</summary>
+        </member>
+        <member name="T:SupplyChain.Domain.Interfaces.IDocumentNumberAllocator">
+            <summary>
+            Allocates gap-free business document numbers safely under concurrency.
+            </summary>
+            <remarks>
+            Replaces the legacy <c>fncNewID2</c> / <c>fncNewID3</c> pattern
+            (<c>SELECT MAX(id) + 1</c>, unlocked), which issued duplicate numbers when two operators saved
+            simultaneously. Implementations must serialise allocation — see
+            <c>docs/03-Database-Migration-Plan.md</c> §3.3.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.IDocumentNumberAllocator.AllocateAsync(System.Int32,SupplyChain.Domain.Enums.DocumentType,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Allocates the next document number for the given company, type and year.
+            </summary>
+            <param name="companyId">The owning company.</param>
+            <param name="type">The kind of document being numbered.</param>
+            <param name="year">The four-digit year the sequence belongs to.</param>
+            <param name="cancellationToken">A cancellation token.</param>
+            <returns>The newly allocated document number.</returns>
+        </member>
+        <member name="T:SupplyChain.Domain.Interfaces.IDocumentNumberGenerator">
+            <summary>
+            Issues business document numbers.
+            </summary>
+            <remarks>
+            <para>
+            Separated from entity identity, which the database supplies. The legacy application used one
+            mechanism for both: <c>MAX(id) + 1</c>, unlocked, serving as the surrogate key <em>and</em> as
+            the number printed on the document.
+            </para>
+            <para>
+            Noticing that one mechanism was doing two different jobs is the substance of the fix; adding a
+            lock to the old scheme would have addressed only half of it.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.IDocumentNumberGenerator.NextAsync(SupplyChain.Domain.Enums.DocumentType,System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Issues the next number for a company, year and document type.
+            </summary>
+            <remarks>
+            Must be called inside a transaction and must take a write lock on the sequence row, so that
+            two concurrent callers cannot receive the same number.
+            </remarks>
+        </member>
+        <member name="T:SupplyChain.Domain.Interfaces.ICountryRepository">
+            <summary>Access to countries. Legacy table: <c>new_Country</c>.</summary>
+        </member>
+        <member name="T:SupplyChain.Domain.Interfaces.IPfNumberRepository">
+            <summary>Access to file numbers. Legacy table: <c>new_PF_No</c>.</summary>
+        </member>
+        <member name="T:SupplyChain.Domain.Interfaces.IPartyRepository">
+            <summary>Access to bill parties. Legacy table: <c>Party</c>.</summary>
+        </member>
+        <member name="T:SupplyChain.Domain.Interfaces.IAccountsHeadRepository">
+            <summary>Access to accounts heads. Legacy table: <c>AccountsHead</c>.</summary>
+        </member>
+        <member name="T:SupplyChain.Domain.Interfaces.IItemTypeRepository">
+            <summary>Access to item types. Legacy table: <c>new_Item_Type</c>.</summary>
+        </member>
+        <member name="T:SupplyChain.Domain.Interfaces.IItemRepository">
+            <summary>Access to items. Legacy table: <c>new_Item_Name</c>.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.IItemRepository.SearchWithTypeAsync(System.String,System.Nullable{System.Int32},System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <summary>Returns one page of items with their item type eagerly loaded.</summary>
+        </member>
+        <member name="T:SupplyChain.Domain.Interfaces.ISupplierRepository">
+            <summary>Access to suppliers. Legacy table: <c>new_Supplier</c>.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.ISupplierRepository.SearchWithCountryAsync(System.String,System.Nullable{System.Int32},System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <summary>Returns one page of suppliers with their country eagerly loaded.</summary>
+        </member>
+        <member name="T:SupplyChain.Domain.Interfaces.IMrrRepository">
+            <summary>Access to goods receipts.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.IMrrRepository.GetWithLinesAsync(System.Int32,System.Threading.CancellationToken)">
+            <summary>Retrieves one receipt with its lines and approvals loaded.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.IMrrRepository.SearchAsync(System.String,System.Nullable{System.Int32},System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <summary>Returns one page of receipts, newest first.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.IMrrRepository.GetPurchaseOrderBalancesAsync(System.Nullable{System.Int32},System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <summary>
+            Returns quantity ordered against quantity received, per purchase order line.
+            </summary>
+            <remarks>
+            <para>
+            Replaces the legacy <c>TEMPSUM</c> routine, which emptied a shared physical table, ran one
+            aggregate query per line in a loop, inserted each result, and read them back. Two users
+            saving receipts at the same time destroyed each other's figures.
+            </para>
+            <para>
+            It also compared identifiers as strings — <c>MRRID &lt;= '&lt;current&gt;'</c> — to mean
+            "every receipt up to this one", which orders <c>'10'</c> before <c>'9'</c>.
+            </para>
+            </remarks>
+        </member>
+        <member name="T:SupplyChain.Domain.Interfaces.PurchaseOrderBalance">
+            <summary>Ordered against received, for one item on one purchase order.</summary>
+            <param name="PurchaseOrderId">The purchase order.</param>
+            <param name="PurchaseOrderNumber">Its document number.</param>
+            <param name="SupplierName">The supplier.</param>
+            <param name="ItemId">The item.</param>
+            <param name="ItemName">Its name.</param>
+            <param name="PrNo">Purchase requisition number.</param>
+            <param name="OrderedQty">Quantity ordered.</param>
+            <param name="ReceivedQty">Quantity received across every receipt.</param>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.PurchaseOrderBalance.#ctor(System.Int32,System.String,System.String,System.Int32,System.String,System.String,System.Decimal,System.Decimal)">
+            <summary>Ordered against received, for one item on one purchase order.</summary>
+            <param name="PurchaseOrderId">The purchase order.</param>
+            <param name="PurchaseOrderNumber">Its document number.</param>
+            <param name="SupplierName">The supplier.</param>
+            <param name="ItemId">The item.</param>
+            <param name="ItemName">Its name.</param>
+            <param name="PrNo">Purchase requisition number.</param>
+            <param name="OrderedQty">Quantity ordered.</param>
+            <param name="ReceivedQty">Quantity received across every receipt.</param>
+        </member>
+        <member name="P:SupplyChain.Domain.Interfaces.PurchaseOrderBalance.PurchaseOrderId">
+            <summary>The purchase order.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Interfaces.PurchaseOrderBalance.PurchaseOrderNumber">
+            <summary>Its document number.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Interfaces.PurchaseOrderBalance.SupplierName">
+            <summary>The supplier.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Interfaces.PurchaseOrderBalance.ItemId">
+            <summary>The item.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Interfaces.PurchaseOrderBalance.ItemName">
+            <summary>Its name.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Interfaces.PurchaseOrderBalance.PrNo">
+            <summary>Purchase requisition number.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Interfaces.PurchaseOrderBalance.OrderedQty">
+            <summary>Quantity ordered.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Interfaces.PurchaseOrderBalance.ReceivedQty">
+            <summary>Quantity received across every receipt.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Interfaces.PurchaseOrderBalance.Balance">
+            <summary>Quantity still outstanding. Negative means more was received than ordered.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.Interfaces.PurchaseOrderBalance.IsOverReceived">
+            <summary>Whether more was received than ordered.</summary>
+        </member>
+        <member name="T:SupplyChain.Domain.Interfaces.INamedEntityRepository`1">
+            <summary>
+            Access to a master-data entity identified by a unique name.
+            </summary>
+            <typeparam name="T">The entity type.</typeparam>
+            <remarks>
+            Adds the three operations every master-data screen needs beyond basic CRUD: finding by name
+            to enforce uniqueness, a paged and filterable search, and a check for whether the record is
+            still referenced before it may be deleted.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.INamedEntityRepository`1.GetByNameAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Finds an entity by exact name, ignoring case, or <c>null</c> if none matches.
+            </summary>
+            <remarks>Used to enforce the uniqueness the legacy forms checked before every save.</remarks>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.INamedEntityRepository`1.SearchAsync(System.String,System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Returns one page of entities, optionally filtered by a search term, ordered by name.
+            </summary>
+            <param name="searchTerm">Matched against the name; <c>null</c> returns everything.</param>
+            <param name="pageNumber">The one-based page number.</param>
+            <param name="pageSize">Maximum rows per page.</param>
+            <param name="cancellationToken">A cancellation token.</param>
+            <returns>The page of results and the total number of matches.</returns>
+            <remarks>
+            Paging is applied in the database. The legacy forms loaded entire tables into an
+            <c>MSFlexGrid</c> with no paging at all, which is why several of them are slow to open.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.INamedEntityRepository`1.IsReferencedAsync(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Determines whether any other record still references this entity.
+            </summary>
+            <remarks>
+            <para>
+            The legacy application did not check. It attempted the DELETE, caught SQL error
+            <c>-2147467259</c>, and showed "This record cannot be deleted" — inferring a foreign-key
+            violation from a generic error code that could equally have meant something else entirely.
+            </para>
+            <para>
+            Checking explicitly means the user gets an accurate answer, and a genuine database failure
+            is no longer silently reported as a referential-integrity problem.
+            </para>
+            </remarks>
+        </member>
+        <member name="T:SupplyChain.Domain.Interfaces.IPurchaseOrderRepository">
+            <summary>Access to purchase orders.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.IPurchaseOrderRepository.GetWithLinesAsync(System.Int32,System.Threading.CancellationToken)">
+            <summary>Retrieves one order with its lines loaded.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.IPurchaseOrderRepository.SearchAsync(System.String,System.Nullable{System.Int32},System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <summary>Returns one page of orders, newest first.</summary>
+            <param name="searchTerm">Matched against the document number and supplier name.</param>
+            <param name="supplierId">Restrict to one supplier.</param>
+            <param name="pageNumber">One-based page number.</param>
+            <param name="pageSize">Rows per page.</param>
+            <param name="cancellationToken">A cancellation token.</param>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.IPurchaseOrderRepository.NumberExistsAsync(System.Int32,System.String,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <summary>Whether an order already carries this document number within the company.</summary>
+            <remarks>
+            The foreign-currency form checked for a duplicate purchase order number and the
+            local-currency form did not. The check is kept.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.IPurchaseOrderRepository.FindReferencingMrrNumbersAsync(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Returns the goods receipt numbers that reference this order, if any.
+            </summary>
+            <remarks>
+            The legacy delete guard ran this and refused with
+            "This PO already uses in MRR No - (…)". Until the goods receipt module exists in Wave 6
+            this returns nothing, and the guard is a no-op that is already wired in.
+            </remarks>
+        </member>
+        <member name="T:SupplyChain.Domain.Interfaces.IRepository`1">
+            <summary>
+            Read and write access to an aggregate root.
+            </summary>
+            <typeparam name="T">The entity type.</typeparam>
+            <remarks>
+            <para>
+            Declared in the Domain layer and implemented in Infrastructure, so the dependency points
+            inward and the domain stays free of EF Core.
+            </para>
+            <para>
+            Deliberately narrow. It intentionally does not expose <see cref="T:System.Linq.IQueryable`1"/>, which would
+            let query concerns leak into the Application layer and make persistence impossible to
+            substitute. Reporting queries, which genuinely do need arbitrary projections, bypass
+            repositories entirely and use dedicated read-only query services — see
+            <c>docs/02-Target-Architecture.md</c> §2.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.IRepository`1.GetByIdAsync(System.Int32,System.Threading.CancellationToken)">
+            <summary>Retrieves an entity by its primary key, or <c>null</c> if it does not exist.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.IRepository`1.ListAsync(System.Threading.CancellationToken)">
+            <summary>Retrieves all entities visible under the current tenant scope.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.IRepository`1.ListAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
+            <summary>Retrieves entities matching the supplied predicate.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.IRepository`1.AnyAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
+            <summary>Determines whether any entity matches the supplied predicate.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.IRepository`1.CountAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
+            <summary>Counts entities matching the supplied predicate, or all when none is supplied.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.IRepository`1.AddAsync(`0,System.Threading.CancellationToken)">
+            <summary>Stages a new entity for insertion. Call <see cref="M:SupplyChain.Domain.Interfaces.IUnitOfWork.SaveChangesAsync(System.Threading.CancellationToken)"/> to commit.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.IRepository`1.Update(`0)">
+            <summary>Stages an existing entity for update.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.IRepository`1.Remove(`0)">
+            <summary>Stages an entity for removal, or for soft deletion when it is <see cref="T:SupplyChain.Domain.Common.ISoftDeletable"/>.</summary>
+        </member>
+        <member name="T:SupplyChain.Domain.Interfaces.IUnitOfWork">
+            <summary>
+            A transactional boundary spanning one or more repositories.
+            </summary>
+            <remarks>
+            <para>
+            This addresses a genuine defect in the legacy application rather than adding ceremony. Saving
+            a goods receipt in the VB6 code wrote to <c>Mrr_Challan_Main</c>, then to
+            <c>MRR_Challan_Sub</c> once per line item, then to <c>Signature</c> — as separate statements
+            with no transaction and only <c>On Error GoTo</c> for recovery. A failure partway through left
+            a header with no lines, or lines with no approval record, and nothing detected it.
+            </para>
+            <para>
+            <see cref="M:SupplyChain.Domain.Interfaces.IUnitOfWork.SaveChangesAsync(System.Threading.CancellationToken)"/> commits the entire change set atomically. Where an operation
+            must also span raw SQL or several save points, <see cref="M:SupplyChain.Domain.Interfaces.IUnitOfWork.BeginTransactionAsync(System.Threading.CancellationToken)"/> gives
+            explicit control.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.IUnitOfWork.SaveChangesAsync(System.Threading.CancellationToken)">
+            <summary>Commits all staged changes atomically.</summary>
+            <returns>The number of state entries written.</returns>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.IUnitOfWork.BeginTransactionAsync(System.Threading.CancellationToken)">
+            <summary>Begins an explicit transaction for operations spanning multiple save points.</summary>
+        </member>
+        <member name="T:SupplyChain.Domain.Interfaces.IDisposableTransaction">
+            <summary>
+            An explicit database transaction that must be committed or is otherwise rolled back on dispose.
+            </summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.IDisposableTransaction.CommitAsync(System.Threading.CancellationToken)">
+            <summary>Commits the transaction.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.Interfaces.IDisposableTransaction.RollbackAsync(System.Threading.CancellationToken)">
+            <summary>Rolls the transaction back.</summary>
+        </member>
+        <member name="T:SupplyChain.Domain.ValueObjects.DocumentNumber">
+            <summary>
+            A user-facing business document number, scoped to a company and a year.
+            </summary>
+            <remarks>
+            <para>
+            The legacy numbering tables (<c>NEW_PI</c>, <c>New_MRR</c>, <c>New_SCID</c>, <c>New_ACCID</c>)
+            each stored the same triple: a sequence number (<c>PI_No</c>), a year (<c>PI_Year</c>) and a
+            pre-formatted display string (<c>PINo</c>). Storing the formatted string alongside its own
+            components meant the two could — and over eighteen databases almost certainly did — drift apart.
+            </para>
+            <para>
+            Here the components are stored and the display form is derived, so they cannot disagree.
+            </para>
+            <para>
+            This is deliberately distinct from <see cref="P:SupplyChain.Domain.Common.Entity.Id"/>. The legacy application used
+            one <c>MAX(id) + 1</c> value for both the primary key and the printed document number, which
+            conflated a storage concern with a business identifier that appears on paperwork and is quoted
+            by suppliers. Splitting them lets the surrogate key be a plain IDENTITY while the document
+            number keeps its gap-free, per-company, per-year sequence.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Domain.ValueObjects.DocumentNumber.#ctor(SupplyChain.Domain.Enums.DocumentType,System.Int32,System.Int32)">
+            <summary>Initialises a new instance.</summary>
+            <param name="type">The kind of document being numbered.</param>
+            <param name="year">The four-digit year the sequence belongs to.</param>
+            <param name="sequence">The one-based sequence number within that year.</param>
+            <exception cref="T:SupplyChain.Domain.Exceptions.DomainException">The year or sequence is out of range.</exception>
+        </member>
+        <member name="P:SupplyChain.Domain.ValueObjects.DocumentNumber.Type">
+            <summary>The kind of document being numbered.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.ValueObjects.DocumentNumber.Year">
+            <summary>The four-digit year the sequence belongs to.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.ValueObjects.DocumentNumber.Sequence">
+            <summary>The one-based sequence number within <see cref="P:SupplyChain.Domain.ValueObjects.DocumentNumber.Year"/>.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.ValueObjects.DocumentNumber.Prefix">
+            <summary>
+            The short code that prefixes the formatted number, e.g. <c>PO</c> or <c>MRR</c>.
+            </summary>
+        </member>
+        <member name="P:SupplyChain.Domain.ValueObjects.DocumentNumber.Formatted">
+            <summary>
+            The display form, e.g. <c>PO/2026/00042</c>.
+            </summary>
+            <remarks>
+            Replaces the legacy pre-formatted <c>PINo</c> / <c>MRRNO</c> / <c>SCNO</c> / <c>ACCNO</c>
+            columns. Because it is derived, it can never disagree with its own components.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Domain.ValueObjects.DocumentNumber.ToString">
+            <summary>Returns <see cref="P:SupplyChain.Domain.ValueObjects.DocumentNumber.Formatted"/>.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.ValueObjects.DocumentNumber.Parse(System.String)">
+            <summary>
+            Parses a document number previously produced by <see cref="P:SupplyChain.Domain.ValueObjects.DocumentNumber.Formatted"/>.
+            </summary>
+            <param name="value">The formatted value, e.g. <c>PO/2026/00042</c>.</param>
+            <returns>The parsed document number.</returns>
+            <exception cref="T:SupplyChain.Domain.Exceptions.DomainException">The value is not a well-formed document number.</exception>
+        </member>
+        <member name="T:SupplyChain.Domain.ValueObjects.Money">
+            <summary>
+            An immutable amount paired with the currency it is denominated in.
+            </summary>
+            <remarks>
+            <para>
+            This type is the mechanism by which the legacy "other currency" table split is collapsed.
+            Rather than <c>Pro_Inv_Main</c> and <c>Pro_Inv_MainOC</c> as parallel tables served by two
+            near-identical VB6 forms, a single <c>PurchaseOrder</c> carries a <see cref="T:SupplyChain.Domain.ValueObjects.Money"/> total.
+            </para>
+            <para>
+            Arithmetic across differing currencies throws rather than silently coercing. The legacy code
+            stored amounts as bare numerics and relied on the operator knowing which form they had opened,
+            so a foreign-currency value could be — and by all appearances sometimes was — added to a local
+            one without complaint.
+            </para>
+            </remarks>
+        </member>
+        <member name="F:SupplyChain.Domain.ValueObjects.Money.Precision">
+            <summary>Number of decimal places retained. Matches SQL Server <c>decimal(18,4)</c>.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.ValueObjects.Money.#ctor(System.Decimal,SupplyChain.Domain.Enums.CurrencyCode)">
+            <summary>Initialises a new instance.</summary>
+            <param name="amount">The monetary amount.</param>
+            <param name="currency">The currency the amount is denominated in.</param>
+        </member>
+        <member name="P:SupplyChain.Domain.ValueObjects.Money.Amount">
+            <summary>The monetary amount, rounded to <see cref="F:SupplyChain.Domain.ValueObjects.Money.Precision"/> decimal places.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.ValueObjects.Money.Currency">
+            <summary>The currency the amount is denominated in.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.ValueObjects.Money.Zero(SupplyChain.Domain.Enums.CurrencyCode)">
+            <summary>A zero amount in the specified currency.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.ValueObjects.Money.ZeroBase">
+            <summary>A zero amount in the base currency (<see cref="F:SupplyChain.Domain.Enums.CurrencyCode.BDT"/>).</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.ValueObjects.Money.IsZero">
+            <summary>Whether this amount is zero.</summary>
+        </member>
+        <member name="P:SupplyChain.Domain.ValueObjects.Money.IsNegative">
+            <summary>Whether this amount is negative.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.ValueObjects.Money.op_Addition(SupplyChain.Domain.ValueObjects.Money,SupplyChain.Domain.ValueObjects.Money)">
+            <summary>Adds two amounts of the same currency.</summary>
+            <exception cref="T:SupplyChain.Domain.Exceptions.DomainException">The currencies differ.</exception>
+        </member>
+        <member name="M:SupplyChain.Domain.ValueObjects.Money.op_Subtraction(SupplyChain.Domain.ValueObjects.Money,SupplyChain.Domain.ValueObjects.Money)">
+            <summary>Subtracts one amount from another of the same currency.</summary>
+            <exception cref="T:SupplyChain.Domain.Exceptions.DomainException">The currencies differ.</exception>
+        </member>
+        <member name="M:SupplyChain.Domain.ValueObjects.Money.op_Multiply(SupplyChain.Domain.ValueObjects.Money,System.Decimal)">
+            <summary>Multiplies an amount by a scalar, typically a quantity.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.ValueObjects.Money.op_Multiply(System.Decimal,SupplyChain.Domain.ValueObjects.Money)">
+            <summary>Multiplies a scalar by an amount.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.ValueObjects.Money.op_UnaryNegation(SupplyChain.Domain.ValueObjects.Money)">
+            <summary>Negates the amount.</summary>
+        </member>
+        <member name="M:SupplyChain.Domain.ValueObjects.Money.ConvertTo(SupplyChain.Domain.Enums.CurrencyCode,System.Decimal)">
+            <summary>
+            Converts this amount into <paramref name="target"/> using the supplied rate.
+            </summary>
+            <param name="target">The currency to convert into.</param>
+            <param name="exchangeRate">Units of <paramref name="target"/> per unit of this currency.</param>
+            <returns>The converted amount.</returns>
+            <exception cref="T:SupplyChain.Domain.Exceptions.DomainException"><paramref name="exchangeRate"/> is not positive.</exception>
+            <remarks>
+            The rate is supplied by the caller rather than looked up, so the exchange rate recorded
+            against a transaction is always the one that was applied to it. The legacy
+            <c>Pro_Inv_MainOC</c> table carried <c>FDate</c>/<c>TDate</c> columns that appear to bound
+            a rate's validity period, implying rates were historically point-in-time.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Domain.ValueObjects.Money.ToString">
+            <summary>Returns the amount formatted with its currency code, e.g. <c>1,250.0000 USD</c>.</summary>
+        </member>
+    </members>
+</doc>

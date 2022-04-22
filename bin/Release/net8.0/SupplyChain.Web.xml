@@ -1,0 +1,1923 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SupplyChain.Web</name>
+    </assembly>
+    <members>
+        <member name="T:SupplyChain.Web.Controllers.AccountController">
+            <summary>
+            Sign-in and sign-out. Migrated from <c>frmUserLogIn.frm</c>.
+            </summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.AccountController.#ctor(Microsoft.AspNetCore.Identity.SignInManager{SupplyChain.Infrastructure.Identity.ApplicationUser},Microsoft.AspNetCore.Identity.UserManager{SupplyChain.Infrastructure.Identity.ApplicationUser},SupplyChain.Infrastructure.Persistence.SupplyChainDbContext,SupplyChain.Application.Abstractions.IDateTimeProvider,SupplyChain.Application.Security.IUserAdminService,Microsoft.Extensions.Logging.ILogger{SupplyChain.Web.Controllers.AccountController})">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.AccountController.Login(System.String)">
+            <summary>Shows the sign-in form.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.AccountController.Login(SupplyChain.Web.ViewModels.LoginViewModel,System.Threading.CancellationToken)">
+            <summary>Attempts to sign the user in.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.AccountController.Logout">
+            <summary>Signs the user out.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.AccountController.AccessDenied">
+            <summary>Shown when a signed-in user lacks the permission an action requires.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.AccountController.ChangePassword">
+            <summary>Shows the change-password form.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.AccountController.ChangePassword(SupplyChain.Web.ViewModels.ChangePasswordViewModel,System.Threading.CancellationToken)">
+            <summary>
+            Changes the signed-in user's own password.
+            </summary>
+            <remarks>Replaces the password flow in <c>frmCreateModifyUser.frm</c>.</remarks>
+        </member>
+        <member name="T:SupplyChain.Web.Controllers.BillsController">
+            <summary>
+            Bills — batches of supplier invoices, cash or credit.
+            </summary>
+            <remarks>
+            Replaces <c>frmBillNO.frm</c> and <c>frmBillNOCash.frm</c>, roughly 3,300 lines across two forms
+            whose only functional difference was the character written to <c>BillMain.Status</c>.
+            See <c>docs/analysis/bill-cash-credit-variant-diff.md</c>.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.BillsController.#ctor(SupplyChain.Application.Accounts.IBillService,SupplyChain.Application.MasterData.IPartyService,SupplyChain.Application.MasterData.IAccountsHeadService)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.BillsController.Index(System.String,System.Nullable{System.Int32},System.Int32,System.Threading.CancellationToken)">
+            <summary>Lists bills.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.BillsController.Details(System.Int32,System.Threading.CancellationToken)">
+            <summary>Shows one bill with its invoices.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.BillsController.Create(System.Threading.CancellationToken)">
+            <summary>Shows the create form.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.BillsController.Create(SupplyChain.Web.ViewModels.BillFormViewModel,System.Threading.CancellationToken)">
+            <summary>Creates a bill and its invoices.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.BillsController.Edit(System.Int32,System.Threading.CancellationToken)">
+            <summary>Shows the edit form.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.BillsController.Edit(System.Int32,SupplyChain.Web.ViewModels.BillFormViewModel,System.Threading.CancellationToken)">
+            <summary>Updates a bill and replaces its invoices.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.BillsController.Delete(System.Int32,System.Threading.CancellationToken)">
+            <summary>Deletes a bill.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.Controllers.ChequeBooksController">
+            <summary>
+            Cheque books and the cheques drawn from them.
+            </summary>
+            <remarks>Replaces <c>frmChequeInfo.frm</c>.</remarks>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.ChequeBooksController.#ctor(SupplyChain.Application.Accounts.IChequeBookService,SupplyChain.Application.MasterData.IBankService)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.ChequeBooksController.Index(System.String,System.Nullable{System.Int32},System.Int32,System.Threading.CancellationToken)">
+            <summary>Lists cheque books.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.ChequeBooksController.Details(System.Int32,System.Threading.CancellationToken)">
+            <summary>Shows one book with its cheques.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.ChequeBooksController.Create(System.Threading.CancellationToken)">
+            <summary>Shows the create form.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.ChequeBooksController.Create(SupplyChain.Web.ViewModels.ChequeBookFormViewModel,System.Threading.CancellationToken)">
+            <summary>Creates a cheque book and its cheques.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.ChequeBooksController.Edit(System.Int32,System.Threading.CancellationToken)">
+            <summary>Shows the edit form.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.ChequeBooksController.Edit(System.Int32,SupplyChain.Web.ViewModels.ChequeBookFormViewModel,System.Threading.CancellationToken)">
+            <summary>Updates a book and replaces its cheques.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.ChequeBooksController.Delete(System.Int32,System.Threading.CancellationToken)">
+            <summary>Deletes a cheque book.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.Controllers.CompanyController">
+            <summary>
+            Company selection and switching. Migrated from the company picker on <c>frmSplash.frm</c>.
+            </summary>
+            <remarks>
+            Selecting a company is the point at which tenant access is verified. Everything downstream
+            trusts the resulting claim, so the check here is the one that matters.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.CompanyController.#ctor(SupplyChain.Infrastructure.Persistence.SupplyChainDbContext,Microsoft.AspNetCore.Identity.SignInManager{SupplyChain.Infrastructure.Identity.ApplicationUser},Microsoft.AspNetCore.Identity.UserManager{SupplyChain.Infrastructure.Identity.ApplicationUser},SupplyChain.Application.Abstractions.ITenantContext,Microsoft.Extensions.Logging.ILogger{SupplyChain.Web.Controllers.CompanyController})">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.CompanyController.Index(System.String,System.Threading.CancellationToken)">
+            <summary>Lists the companies the signed-in user may work in.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.CompanyController.Select(System.Int32,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Makes the given company the active one for this session.
+            </summary>
+            <remarks>
+            The access check below is the security boundary. It queries <c>UserCompanyAccess</c> for
+            <em>this</em> user and <em>this</em> company; a company the user has not been granted
+            cannot be selected regardless of what was posted. Only after it passes is the company
+            written into the authentication cookie, where <see cref="T:SupplyChain.Web.Services.TenantContext"/> reads it.
+            </remarks>
+        </member>
+        <member name="T:SupplyChain.Web.Controllers.HomeController">
+            <summary>
+            The application shell. Migrated from <c>frmMDIMain.frm</c>.
+            </summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.HomeController.#ctor(SupplyChain.Application.Abstractions.ITenantContext)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.HomeController.Index">
+            <summary>The dashboard shown after sign-in and company selection.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.HomeController.Error">
+            <summary>Renders the error page.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.Controllers.ItemsController">
+            <summary>Items. Replaces <c>frmNewItemName.frm</c>.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.ItemsController.#ctor(SupplyChain.Application.MasterData.IItemService,SupplyChain.Application.MasterData.IItemTypeService)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.ItemsController.Index(System.String,System.Nullable{System.Int32},System.Int32,System.Threading.CancellationToken)">
+            <summary>Lists items, filtered by name and item type, paged.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.ItemsController.Create(System.Threading.CancellationToken)">
+            <summary>Shows the create form.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.ItemsController.Create(SupplyChain.Web.ViewModels.ItemFormViewModel,System.Threading.CancellationToken)">
+            <summary>Creates an item.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.ItemsController.Edit(System.Int32,System.Threading.CancellationToken)">
+            <summary>Shows the edit form.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.ItemsController.Edit(System.Int32,SupplyChain.Web.ViewModels.ItemFormViewModel,System.Threading.CancellationToken)">
+            <summary>Updates an item.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.ItemsController.Delete(System.Int32,System.Threading.CancellationToken)">
+            <summary>Deletes an item, provided nothing still references it.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.ItemsController.RedisplayAsync(SupplyChain.Web.ViewModels.ItemFormViewModel,System.Threading.CancellationToken)">
+            <summary>Repopulates the drop-down before redisplaying a form that failed validation.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.Controllers.ItemTypesController">
+            <summary>
+            Item types. Replaces <c>frmNewItemType.frm</c>, labelled "Item Group" on the legacy menu.
+            </summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.ItemTypesController.#ctor(SupplyChain.Application.MasterData.IItemTypeService)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.ItemTypesController.Index(System.String,System.Int32,System.Threading.CancellationToken)">
+            <summary>Lists item types, filtered and paged.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.ItemTypesController.Create">
+            <summary>Shows the create form.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.ItemTypesController.Create(SupplyChain.Web.ViewModels.ItemTypeFormViewModel,System.Threading.CancellationToken)">
+            <summary>Creates an item type.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.ItemTypesController.Edit(System.Int32,System.Threading.CancellationToken)">
+            <summary>Shows the edit form.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.ItemTypesController.Edit(System.Int32,SupplyChain.Web.ViewModels.ItemTypeFormViewModel,System.Threading.CancellationToken)">
+            <summary>Updates an item type.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.ItemTypesController.Delete(System.Int32,System.Threading.CancellationToken)">
+            <summary>Deletes an item type, provided no item is classified under it.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.Controllers.CountriesController">
+            <summary>Countries. Replaces <c>frmNewCountry.frm</c>.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.CountriesController.#ctor(SupplyChain.Application.MasterData.ICountryService)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.Controllers.CountriesController.Descriptor">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Web.Controllers.PfNumbersController">
+            <summary>File numbers. Replaces <c>frmNewPFNo.frm</c>.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.PfNumbersController.#ctor(SupplyChain.Application.MasterData.IPfNumberService)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.Controllers.PfNumbersController.Descriptor">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Web.Controllers.PartiesController">
+            <summary>Bill parties. Replaces <c>frmParty.frm</c>.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.PartiesController.#ctor(SupplyChain.Application.MasterData.IPartyService)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.Controllers.PartiesController.Descriptor">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Web.Controllers.AccountsHeadsController">
+            <summary>Accounts heads. Replaces <c>frmNewAccountsHead.FRM</c>.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.AccountsHeadsController.#ctor(SupplyChain.Application.MasterData.IAccountsHeadService)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.Controllers.AccountsHeadsController.Descriptor">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Web.Controllers.BanksController">
+            <summary>Banks. Migrated from <c>New_Bank</c>, which had no screen of its own.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.BanksController.#ctor(SupplyChain.Application.MasterData.IBankService)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.Controllers.BanksController.Descriptor">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Web.Controllers.MrrsController">
+            <summary>
+            Goods receipts (MRR) and the purchase order balance they reconcile against.
+            </summary>
+            <remarks>
+            Replaces <c>frmMrrReceiveChallan.frm</c> and <c>frmMrrReceiveChallanOtherCurr.frm</c> —
+            approximately 6,900 lines across two near-identical forms, one of which deleted from the other's
+            table. See <c>docs/analysis/mrr-currency-variant-diff.md</c>.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.MrrsController.#ctor(SupplyChain.Application.Receiving.IMrrService,SupplyChain.Application.MasterData.ISupplierService,SupplyChain.Application.MasterData.IItemService,SupplyChain.Application.Purchasing.IPurchaseOrderService)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.MrrsController.Index(System.String,System.Nullable{System.Int32},System.Int32,System.Threading.CancellationToken)">
+            <summary>Lists goods receipts.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.MrrsController.Details(System.Int32,System.Threading.CancellationToken)">
+            <summary>Shows one receipt with its lines and approvals.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.MrrsController.Create(System.Threading.CancellationToken)">
+            <summary>Shows the create form.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.MrrsController.Create(SupplyChain.Web.ViewModels.MrrFormViewModel,System.Threading.CancellationToken)">
+            <summary>Creates a receipt, its lines and its approvals.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.MrrsController.Edit(System.Int32,System.Threading.CancellationToken)">
+            <summary>Shows the edit form.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.MrrsController.Edit(System.Int32,SupplyChain.Web.ViewModels.MrrFormViewModel,System.Threading.CancellationToken)">
+            <summary>Updates a receipt and replaces its lines.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.MrrsController.Delete(System.Int32,System.Threading.CancellationToken)">
+            <summary>Deletes a receipt.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.MrrsController.Balance(SupplyChain.Web.ViewModels.PurchaseOrderBalanceViewModel,System.Threading.CancellationToken)">
+            <summary>
+            Ordered against received, per purchase order line.
+            </summary>
+            <remarks>
+            Replaces <c>rptPOBalanceQty.rpt</c>, deferred from Wave 5 because it needs goods receipts to
+            mean anything.
+            </remarks>
+        </member>
+        <member name="T:SupplyChain.Web.Controllers.NamedMasterDataController">
+            <summary>
+            Shared CRUD controller for master-data entities identified by a unique name.
+            </summary>
+            <remarks>
+            <para>
+            Four legacy forms — <c>frmNewCountry</c>, <c>frmNewPFNo</c>, <c>frmParty</c> and
+            <c>frmNewAccountsHead</c> — reduce to one controller and one set of Razor views. Each
+            subclass supplies only its service and its labels.
+            </para>
+            <para>
+            Actions stay thin: bind, call the service, translate the result. All rules live in the
+            Application layer, which is what makes them testable without a browser.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.NamedMasterDataController.#ctor(SupplyChain.Application.MasterData.INamedMasterDataService)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.Controllers.NamedMasterDataController.Descriptor">
+            <summary>Labels and route information for this screen.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.NamedMasterDataController.Index(System.String,System.Int32,System.Threading.CancellationToken)">
+            <summary>Lists records, filtered and paged.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.NamedMasterDataController.Create">
+            <summary>Shows the create form.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.NamedMasterDataController.Create(SupplyChain.Web.ViewModels.NamedMasterDataFormViewModel,System.Threading.CancellationToken)">
+            <summary>Creates a record.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.NamedMasterDataController.Edit(System.Int32,System.Threading.CancellationToken)">
+            <summary>Shows the edit form.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.NamedMasterDataController.Edit(System.Int32,SupplyChain.Web.ViewModels.NamedMasterDataFormViewModel,System.Threading.CancellationToken)">
+            <summary>Updates a record.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.NamedMasterDataController.Delete(System.Int32,System.Threading.CancellationToken)">
+            <summary>Deletes a record, provided nothing still references it.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.Controllers.PurchaseOrdersController">
+            <summary>
+            Purchase orders.
+            </summary>
+            <remarks>
+            Replaces <c>frmProformaInvoice.frm</c> and <c>frmProformaInvoiceOC.frm</c> — around 4,100 lines
+            of VB6 across two near-identical forms. The differences between them are recorded in
+            <c>docs/analysis/po-currency-variant-diff.md</c>.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.PurchaseOrdersController.#ctor(SupplyChain.Application.Purchasing.IPurchaseOrderService,SupplyChain.Application.MasterData.ISupplierService,SupplyChain.Application.MasterData.IItemService)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.PurchaseOrdersController.Index(System.String,System.Nullable{System.Int32},System.Int32,System.Threading.CancellationToken)">
+            <summary>Lists purchase orders.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.PurchaseOrdersController.Details(System.Int32,System.Threading.CancellationToken)">
+            <summary>Shows one order with its lines.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.PurchaseOrdersController.Create(System.Threading.CancellationToken)">
+            <summary>Shows the create form.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.PurchaseOrdersController.Create(SupplyChain.Web.ViewModels.PurchaseOrderFormViewModel,System.Threading.CancellationToken)">
+            <summary>Creates an order and its lines.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.PurchaseOrdersController.Edit(System.Int32,System.Threading.CancellationToken)">
+            <summary>Shows the edit form.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.PurchaseOrdersController.Edit(System.Int32,SupplyChain.Web.ViewModels.PurchaseOrderFormViewModel,System.Threading.CancellationToken)">
+            <summary>Updates an order and replaces its lines.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.PurchaseOrdersController.Delete(System.Int32,System.Threading.CancellationToken)">
+            <summary>Deletes an order, unless a goods receipt references it.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.Controllers.ReportsController">
+            <summary>
+            Read-only reports.
+            </summary>
+            <remarks>
+            <para>
+            Wave 3 is the first module of the parallel run described in
+            <c>docs/03-Database-Migration-Plan.md</c> §5.2: output is compared against the live VB6
+            application while that system remains authoritative for writes.
+            </para>
+            <para>
+            Each report has one action serving both media. The screen and the PDF share a query and a
+            column definition, and differ only in presentation.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.ReportsController.#ctor(SupplyChain.Application.Reports.TransactionStatement.ITransactionStatementQueryService,SupplyChain.Application.Reports.PartyStatement.IPartyStatementQueryService,SupplyChain.Application.Reports.PartyStatement.IPartyStatementSummaryQueryService,SupplyChain.Application.Reports.MonthlyStatement.IMonthlyStatementQueryService,SupplyChain.Application.MasterData.ISupplierService,SupplyChain.Application.MasterData.IPartyService,SupplyChain.Application.MasterData.IAccountsHeadService,SupplyChain.Application.Reports.Registers.IBillRegisterQueryService,SupplyChain.Application.Reports.Registers.IChequeRegisterQueryService,SupplyChain.Application.Reports.Registers.IAuditQueryService,SupplyChain.Application.Reports.Registers.IPurchaseOrderRegisterQueryService,SupplyChain.Application.Reports.Registers.IMrrRegisterQueryService,SupplyChain.Application.Reports.Registers.IItemMovementQueryService,SupplyChain.Application.MasterData.IItemService,SupplyChain.Application.MasterData.IItemTypeService,SupplyChain.Application.Purchasing.IPurchaseOrderService,SupplyChain.Application.Accounts.IChequeBookService,SupplyChain.Application.Reports.IPdfRenderer)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.ReportsController.PartyStatement(SupplyChain.Web.ViewModels.PartyStatementViewModel,System.String,System.Threading.CancellationToken)">
+            <summary>
+            The party statement, in detail or summarised.
+            </summary>
+            <remarks>
+            Replaces the densest form in the legacy application: 752 lines containing a hundred SQL
+            statements, plus the shared scratch table it used to union across eighteen databases.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.ReportsController.MonthlyStatement(SupplyChain.Web.ViewModels.MonthlyStatementViewModel,System.String,System.Threading.CancellationToken)">
+            <summary>The monthly statement.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.ReportsController.BillRegister(SupplyChain.Web.ViewModels.BillRegisterViewModel,System.String,System.Threading.CancellationToken)">
+            <summary>
+            The bill register.
+            </summary>
+            <remarks>
+            Replaces sixteen Crystal files: eight filter modes in a cash set and a credit set, driven
+            by two forms. The mode and the type are parameters here.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.ReportsController.ChequeRegister(SupplyChain.Web.ViewModels.ChequeRegisterViewModel,System.String,System.Threading.CancellationToken)">
+            <summary>The cheque register. Replaces three Crystal files.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.ReportsController.Audit(SupplyChain.Web.ViewModels.AuditReportViewModel,System.String,System.Threading.CancellationToken)">
+            <summary>
+            The audit report.
+            </summary>
+            <remarks>
+            Replaces four Crystal files across three forms. The legacy reports could say a document had
+            been deleted but not who deleted it — the schema recorded only the flag.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.ReportsController.PurchaseOrderRegister(SupplyChain.Web.ViewModels.PurchaseOrderRegisterViewModel,System.String,System.Threading.CancellationToken)">
+            <summary>The purchase order register. Replaces thirteen Crystal files.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.ReportsController.MrrRegister(SupplyChain.Web.ViewModels.MrrRegisterViewModel,System.String,System.Threading.CancellationToken)">
+            <summary>The goods receipt register. Replaces twelve Crystal files.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.ReportsController.ItemMovement(SupplyChain.Web.ViewModels.ItemMovementViewModel,System.String,System.Threading.CancellationToken)">
+            <summary>Item movement: ordered against received. Replaces five Crystal files.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.ReportsController.Pdf``1(System.Byte[],SupplyChain.Application.Reports.ReportResult{``0})">
+            <summary>Returns a rendered PDF with a file name derived from the report.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.ReportsController.Index">
+            <summary>Lists the available reports.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.ReportsController.TransactionStatement(SupplyChain.Web.ViewModels.TransactionStatementViewModel,System.String,System.Threading.CancellationToken)">
+            <summary>
+            The transaction statement, in one of its four modes.
+            </summary>
+            <param name="model">Filters, bound from the query string so a report URL can be shared.</param>
+            <param name="format">Pass <c>pdf</c> to download rather than view.</param>
+            <param name="cancellationToken">A cancellation token.</param>
+        </member>
+        <member name="T:SupplyChain.Web.Controllers.StatementsController">
+            <summary>
+            Cash-and-credit statements.
+            </summary>
+            <remarks>
+            Replaces <c>frmStatementCheque.frm</c>. Wave 3 built <c>CashCreditStatement</c> read-only
+            because the reports needed it first; this completes it.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.StatementsController.#ctor(SupplyChain.Application.Statements.IStatementService,SupplyChain.Application.MasterData.ISupplierService)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.StatementsController.Index(System.String,System.Nullable{SupplyChain.Domain.Enums.TransactionType},System.Int32,System.Threading.CancellationToken)">
+            <summary>Lists statements.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.StatementsController.Details(System.Int32,SupplyChain.Domain.Enums.TransactionType,System.DateOnly,System.Threading.CancellationToken)">
+            <summary>Shows one statement with its entries.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.StatementsController.Create(System.Threading.CancellationToken)">
+            <summary>Shows the create form.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.StatementsController.Create(SupplyChain.Web.ViewModels.StatementFormViewModel,System.Threading.CancellationToken)">
+            <summary>Creates a statement and its entries.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.StatementsController.Edit(System.Int32,SupplyChain.Domain.Enums.TransactionType,System.DateOnly,System.Threading.CancellationToken)">
+            <summary>Shows the edit form.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.StatementsController.Edit(System.Int32,SupplyChain.Domain.Enums.TransactionType,System.DateOnly,SupplyChain.Web.ViewModels.StatementFormViewModel,System.Threading.CancellationToken)">
+            <summary>Replaces a statement's entries, marking the previous set superseded.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.StatementsController.Delete(System.Int32,SupplyChain.Domain.Enums.TransactionType,System.DateOnly,System.Threading.CancellationToken)">
+            <summary>Deletes a statement.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.Controllers.SuppliersController">
+            <summary>
+            Suppliers. Replaces <c>frmNewSupplier.frm</c>.
+            </summary>
+            <remarks>
+            The clearest single illustration of the migration: saving one supplier in the VB6 application
+            executed seventeen hardcoded INSERT statements, one per company database, untransacted.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.SuppliersController.#ctor(SupplyChain.Application.MasterData.ISupplierService,SupplyChain.Application.MasterData.ICountryService)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.SuppliersController.Index(System.String,System.Nullable{System.Int32},System.Int32,System.Threading.CancellationToken)">
+            <summary>Lists suppliers, filtered by name and country, paged.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.SuppliersController.Create(System.Threading.CancellationToken)">
+            <summary>Shows the create form.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.SuppliersController.Create(SupplyChain.Web.ViewModels.SupplierFormViewModel,System.Threading.CancellationToken)">
+            <summary>Creates a supplier.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.SuppliersController.Edit(System.Int32,System.Threading.CancellationToken)">
+            <summary>Shows the edit form.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.SuppliersController.Edit(System.Int32,SupplyChain.Web.ViewModels.SupplierFormViewModel,System.Threading.CancellationToken)">
+            <summary>Updates a supplier.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.SuppliersController.Delete(System.Int32,System.Threading.CancellationToken)">
+            <summary>Deletes a supplier, provided nothing still references it.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.SuppliersController.RedisplayAsync(SupplyChain.Web.ViewModels.SupplierFormViewModel,System.Threading.CancellationToken)">
+            <summary>Repopulates the drop-down before redisplaying a form that failed validation.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.Controllers.UsersController">
+            <summary>
+            User administration: accounts, roles, permissions and company access.
+            </summary>
+            <remarks>
+            Replaces <c>frmCreateUser.frm</c>, <c>frmPermissionMenu.frm</c> and
+            <c>frmPermissionCom.frm</c>. Every action carries its own policy: in the legacy application
+            these screens were reachable through menu items that <c>prcMenuInvisibleAll</c> left visible
+            to non-administrators.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.UsersController.#ctor(SupplyChain.Application.Security.IUserAdminService)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.UsersController.Index(System.String,System.Int32,System.Threading.CancellationToken)">
+            <summary>Lists user accounts.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.UsersController.Create(System.Threading.CancellationToken)">
+            <summary>Shows the create-user form.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.UsersController.Create(SupplyChain.Web.ViewModels.CreateUserViewModel,System.Threading.CancellationToken)">
+            <summary>Creates a user account.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.UsersController.Edit(System.Int32,System.Threading.CancellationToken)">
+            <summary>Shows the edit-user form.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.UsersController.Edit(System.Int32,SupplyChain.Web.ViewModels.EditUserViewModel,System.Threading.CancellationToken)">
+            <summary>Updates a user account.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.UsersController.ResetPassword(System.Int32,System.Threading.CancellationToken)">
+            <summary>Shows the password reset form.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.UsersController.ResetPassword(System.Int32,SupplyChain.Web.ViewModels.ResetPasswordViewModel,System.Threading.CancellationToken)">
+            <summary>Resets a user's password.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.UsersController.Permissions(System.Int32,System.Threading.CancellationToken)">
+            <summary>Shows the permission assignment screen.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.UsersController.Permissions(System.Int32,SupplyChain.Web.ViewModels.UserPermissionsViewModel,System.Threading.CancellationToken)">
+            <summary>Replaces the permissions granted directly to a user.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.UsersController.CompanyAccess(System.Int32,System.Threading.CancellationToken)">
+            <summary>Shows the company access screen.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Controllers.UsersController.CompanyAccess(System.Int32,SupplyChain.Web.ViewModels.UserCompanyAccessViewModel,System.Threading.CancellationToken)">
+            <summary>Replaces the set of companies a user may access.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.Reporting.PurchaseOrderRegisterColumns">
+            <summary>Printed columns for the purchase order register.</summary>
+        </member>
+        <member name="F:SupplyChain.Web.Reporting.PurchaseOrderRegisterColumns.Definition">
+            <summary>The column definitions, in print order.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.Reporting.MrrRegisterColumns">
+            <summary>Printed columns for the goods receipt register.</summary>
+        </member>
+        <member name="F:SupplyChain.Web.Reporting.MrrRegisterColumns.Definition">
+            <summary>The column definitions, in print order.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.Reporting.ItemMovementColumns">
+            <summary>Printed columns for the item movement report.</summary>
+        </member>
+        <member name="F:SupplyChain.Web.Reporting.ItemMovementColumns.Definition">
+            <summary>The column definitions, in print order.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.Reporting.BillRegisterColumns">
+            <summary>Printed columns for the bill register.</summary>
+        </member>
+        <member name="F:SupplyChain.Web.Reporting.BillRegisterColumns.Definition">
+            <summary>The column definitions, in print order.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.Reporting.ChequeRegisterColumns">
+            <summary>Printed columns for the cheque register.</summary>
+        </member>
+        <member name="F:SupplyChain.Web.Reporting.ChequeRegisterColumns.Definition">
+            <summary>The column definitions, in print order.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.Reporting.AuditColumns">
+            <summary>Printed columns for the audit report.</summary>
+        </member>
+        <member name="F:SupplyChain.Web.Reporting.AuditColumns.Definition">
+            <summary>The column definitions, in print order.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.Reporting.PartyStatementColumns">
+            <summary>Printed columns for the party statement, in detail.</summary>
+        </member>
+        <member name="F:SupplyChain.Web.Reporting.PartyStatementColumns.Detail">
+            <summary>The column definitions, in print order.</summary>
+        </member>
+        <member name="F:SupplyChain.Web.Reporting.PartyStatementColumns.Summary">
+            <summary>The summary column definitions.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.Reporting.MonthlyStatementColumns">
+            <summary>Printed columns for the monthly statement.</summary>
+        </member>
+        <member name="F:SupplyChain.Web.Reporting.MonthlyStatementColumns.Definition">
+            <summary>The column definitions, in print order.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.Reporting.TransactionStatementColumns">
+            <summary>
+            The printed columns of the transaction statement.
+            </summary>
+            <remarks>
+            <para>
+            Order and content follow the SELECT list in <c>frmrptTransactionWiseReport.frm</c> line 447, so
+            a printed page can be compared against the legacy output column by column during the parallel
+            run.
+            </para>
+            <para>
+            Defined once and used by the PDF; the Razor view renders the same fields as an HTML table it
+            can sort. Sharing the definition would force the screen to give up sorting and the page to give
+            up its column widths, which is why only the query is shared.
+            </para>
+            </remarks>
+        </member>
+        <member name="F:SupplyChain.Web.Reporting.TransactionStatementColumns.Definition">
+            <summary>The column definitions, in print order.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Reporting.TransactionStatementColumns.Describe(SupplyChain.Domain.Enums.TransactionType)">
+            <summary>
+            Renders a transaction type using the legacy wording.
+            </summary>
+            <remarks>
+            The VB6 filter combo listed "Cash", "Credit", "Cheque" and "Cash Cheque"; the enum name
+            <c>CashCheque</c> would print without its space.
+            </remarks>
+        </member>
+        <member name="T:SupplyChain.Web.Services.CurrentUser">
+            <inheritdoc cref="T:SupplyChain.Application.Abstractions.ICurrentUser" />
+            <remarks>
+            Reads from the signed authentication cookie rather than from mutable server state. The legacy
+            application kept the current user in a global variable that any form could overwrite.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Web.Services.CurrentUser.#ctor(Microsoft.AspNetCore.Http.IHttpContextAccessor)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.Services.CurrentUser.UserId">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Web.Services.CurrentUser.UserName">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Web.Services.CurrentUser.IsAuthenticated">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Web.Services.CurrentUser.ClientIdentifier">
+            <inheritdoc />
+            <remarks>
+            Successor to the legacy <c>PCName</c> audit column, which was populated from
+            <c>fncComputerName()</c>. Over HTTP the nearest equivalent is the caller's address.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Web.Services.CurrentUser.HasPermission(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Web.Services.TenantContext">
+            <inheritdoc cref="T:SupplyChain.Application.Abstractions.ITenantContext" />
+            <remarks>
+            <para>
+            The active company is carried in the authentication cookie as a claim. The cookie is signed
+            and encrypted by the data protection stack, so a user cannot edit it to reach a company they
+            have not been granted. Access is verified against <c>UserCompanyAccess</c> at the moment the
+            company is selected, in <c>CompanyController.Select</c>, and the resulting claim is the
+            evidence of that check.
+            </para>
+            <para>
+            This replaces the legacy global <c>WDBName</c>, which held the name of whichever of the
+            eighteen databases the user picked at login and was read directly by every form.
+            </para>
+            </remarks>
+        </member>
+        <member name="F:SupplyChain.Web.Services.TenantContext.CompanyIdClaim">
+            <summary>Claim type carrying the active company identifier.</summary>
+        </member>
+        <member name="F:SupplyChain.Web.Services.TenantContext.CompanyShortCodeClaim">
+            <summary>Claim type carrying the active company short code.</summary>
+        </member>
+        <member name="F:SupplyChain.Web.Services.TenantContext.CompanyNameClaim">
+            <summary>Claim type carrying the active company display name.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.Services.TenantContext.#ctor(Microsoft.AspNetCore.Http.IHttpContextAccessor)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.Services.TenantContext.CompanyId">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Web.Services.TenantContext.CompanyShortCode">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Web.Services.TenantContext.CompanyName">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Web.Services.TenantContext.CanAccessAllCompanies">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Web.Services.TenantContext.RequireCompanyId">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Web.ViewComponents.NavigationViewComponent">
+            <summary>
+            Renders the main navigation, showing only what the current user may reach.
+            </summary>
+            <remarks>
+            <para>
+            This is the successor to <c>modPermission.bas</c>, which walked the MDI menu tree setting
+            <c>.Visible = False</c> on items the user lacked rights to.
+            </para>
+            <para>
+            The essential difference is that this is now <em>only</em> a convenience. Each target action
+            carries its own authorisation policy, so hiding an item shapes the interface rather than
+            enforcing the rule. In the legacy application, hiding it <em>was</em> the rule.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Web.ViewComponents.NavigationViewComponent.#ctor(SupplyChain.Application.Abstractions.ICurrentUser,SupplyChain.Application.Abstractions.ITenantContext)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.ViewComponents.NavigationViewComponent.Invoke">
+            <summary>Builds the navigation model for the current user.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewComponents.NavigationViewModel">
+            <summary>Data required to render the navigation bar.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewComponents.NavigationViewModel.CompanyName">
+            <summary>Active company name.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewComponents.NavigationViewModel.CompanyShortCode">
+            <summary>Active company short code.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewComponents.NavigationViewModel.UserName">
+            <summary>Signed-in user name.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewComponents.NavigationViewModel.CanViewCompanies">
+            <summary>Whether to show the company administration link.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewComponents.NavigationViewModel.CanViewMasterData">
+            <summary>Whether to show the House Keeping (master data) menu.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewComponents.NavigationViewModel.CanViewUsers">
+            <summary>Whether to show user administration.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewComponents.NavigationViewModel.CanManageUsers">
+            <summary>Whether to show the user administration link.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewComponents.NavigationViewModel.CanViewReports">
+            <summary>Whether to show the reports menu.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.BillIndexViewModel">
+            <summary>Bill list.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.BillIndexViewModel.Results">
+            <summary>The page of bills to display.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.BillIndexViewModel.SearchTerm">
+            <summary>The active search term, if any.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.BillIndexViewModel.PartyId">
+            <summary>The active party filter, if any.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.BillIndexViewModel.Parties">
+            <summary>Parties available for filtering.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.BillFormViewModel">
+            <summary>
+            Bill create and edit form.
+            </summary>
+            <remarks>
+            Replaces <c>frmBillNO.frm</c> and <c>frmBillNOCash.frm</c>. The cash-or-credit choice that
+            justified two separate forms is now a field on this one.
+            </remarks>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.BillFormViewModel.Id">
+            <summary>The record identifier, or <c>null</c> when creating.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.BillFormViewModel.Number">
+            <summary>The identification number, shown once the bill exists.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.BillFormViewModel.IdentificationDate">
+            <summary>When the batch was identified. Legacy column: <c>IDDate</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.BillFormViewModel.Kind">
+            <summary>Cash or credit. Legacy column: <c>Status</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.BillFormViewModel.Currency">
+            <summary>Currency the amounts are recorded in.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.BillFormViewModel.Lines">
+            <summary>The invoices.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.BillFormViewModel.Parties">
+            <summary>Parties available for selection.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.BillFormViewModel.AccountsHeads">
+            <summary>Accounts heads available for selection.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.BillFormViewModel.IsEdit">
+            <summary>Whether this form is editing an existing bill.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.BillLineInputModel">
+            <summary>One invoice as posted by the form.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.BillLineInputModel.AccountsHeadId">
+            <summary>The accounts head posted to.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.BillLineInputModel.PartyId">
+            <summary>The party billed.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.BillLineInputModel.BillNo">
+            <summary>Invoice number.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.BillLineInputModel.BillDate">
+            <summary>Invoice date.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.BillLineInputModel.Amount">
+            <summary>Invoice amount.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.BillLineInputModel.MrrNo">
+            <summary>Goods receipt referenced.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.BillLineInputModel.MrrDate">
+            <summary>Goods receipt date referenced.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.BillLineInputModel.Remarks">
+            <summary>Free-text note.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.ChequeBookIndexViewModel">
+            <summary>Cheque book list.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ChequeBookIndexViewModel.Results">
+            <summary>The page of cheque books to display.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ChequeBookIndexViewModel.SearchTerm">
+            <summary>The active search term, if any.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ChequeBookIndexViewModel.BankId">
+            <summary>The active bank filter, if any.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ChequeBookIndexViewModel.Banks">
+            <summary>Banks available for filtering.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.ChequeBookFormViewModel">
+            <summary>Cheque book create and edit form. Replaces <c>frmChequeInfo.frm</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ChequeBookFormViewModel.Id">
+            <summary>The record identifier, or <c>null</c> when creating.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ChequeBookFormViewModel.BankId">
+            <summary>The issuing bank.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ChequeBookFormViewModel.BookNo">
+            <summary>The book number.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ChequeBookFormViewModel.StartNo">
+            <summary>First cheque number in the book.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ChequeBookFormViewModel.EndNo">
+            <summary>Last cheque number in the book.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ChequeBookFormViewModel.Prefix">
+            <summary>Optional prefix printed before the number.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ChequeBookFormViewModel.Currency">
+            <summary>Currency the cheques are drawn in.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ChequeBookFormViewModel.Cheques">
+            <summary>The cheques drawn.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ChequeBookFormViewModel.Banks">
+            <summary>Banks available for selection.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ChequeBookFormViewModel.IsEdit">
+            <summary>Whether this form is editing an existing book.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.ChequeInputModel">
+            <summary>One cheque as posted by the form.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ChequeInputModel.ChequeNo">
+            <summary>Cheque number.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ChequeInputModel.IssueDate">
+            <summary>When it was issued.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ChequeInputModel.Value">
+            <summary>The amount.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ChequeInputModel.Beneficiary">
+            <summary>Who it is drawn in favour of.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ChequeInputModel.PaymentParticulars">
+            <summary>What the payment is for.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ChequeInputModel.EncashmentDate">
+            <summary>When it was honoured, if it has been.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ChequeInputModel.Remarks">
+            <summary>Free-text note.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.CompanySelectViewModel">
+            <summary>
+            Company picker shown after sign-in. Migrated from the company selection on <c>frmSplash.frm</c>.
+            </summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.CompanySelectViewModel.Companies">
+            <summary>Companies the signed-in user has been granted access to.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.CompanySelectViewModel.CurrentCompanyId">
+            <summary>The currently active company, if one has been chosen.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.CompanySelectViewModel.ReturnUrl">
+            <summary>Where to send the user after selecting a company.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.PurchaseOrderRegisterViewModel">
+            <summary>The purchase order register screen. Replaces thirteen Crystal files.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderRegisterViewModel.Mode">
+            <summary>Which filter is applied.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderRegisterViewModel.PurchaseOrderId">
+            <summary>The order, for the single-order mode.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderRegisterViewModel.SupplierId">
+            <summary>The supplier, for the supplier mode.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderRegisterViewModel.ItemTypeId">
+            <summary>The item type, for the item-type mode.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderRegisterViewModel.FromDate">
+            <summary>Start of the order-date range.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderRegisterViewModel.ToDate">
+            <summary>End of that range.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderRegisterViewModel.HasRun">
+            <summary>Whether the form has been submitted.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderRegisterViewModel.PurchaseOrders">
+            <summary>Purchase orders available for selection.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderRegisterViewModel.Suppliers">
+            <summary>Suppliers available for selection.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderRegisterViewModel.ItemTypes">
+            <summary>Item types available for selection.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderRegisterViewModel.Report">
+            <summary>The report output, once run.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.MrrRegisterViewModel">
+            <summary>The goods receipt register screen. Replaces twelve Crystal files.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrRegisterViewModel.Mode">
+            <summary>Which filter is applied.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrRegisterViewModel.Reference">
+            <summary>The receipt or challan number, for the reference modes.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrRegisterViewModel.SupplierId">
+            <summary>The supplier, for the supplier modes.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrRegisterViewModel.ItemId">
+            <summary>The item, for the supplier-and-item mode.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrRegisterViewModel.FromDate">
+            <summary>Start of the date range.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrRegisterViewModel.ToDate">
+            <summary>End of that range.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrRegisterViewModel.HasRun">
+            <summary>Whether the form has been submitted.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrRegisterViewModel.Suppliers">
+            <summary>Suppliers available for selection.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrRegisterViewModel.Items">
+            <summary>Items available for selection.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrRegisterViewModel.Report">
+            <summary>The report output, once run.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrRegisterViewModel.UsesReference">
+            <summary>Whether the chosen mode filters on a typed reference.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrRegisterViewModel.UsesDateRange">
+            <summary>Whether the chosen mode filters on a date range.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrRegisterViewModel.UsesSupplier">
+            <summary>Whether the chosen mode filters on a supplier.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.ItemMovementViewModel">
+            <summary>The item movement screen. Replaces five Crystal files.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ItemMovementViewModel.Subject">
+            <summary>What the report covers.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ItemMovementViewModel.ItemId">
+            <summary>Restrict to one item; blank covers every item.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ItemMovementViewModel.FromDate">
+            <summary>Start of the date range.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ItemMovementViewModel.ToDate">
+            <summary>End of that range.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ItemMovementViewModel.AllCompanies">
+            <summary>Report across every company.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ItemMovementViewModel.CanRunAllCompanies">
+            <summary>Whether the user may report across companies.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ItemMovementViewModel.HasRun">
+            <summary>Whether the form has been submitted.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ItemMovementViewModel.Items">
+            <summary>Items available for selection.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ItemMovementViewModel.Report">
+            <summary>The report output, once run.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.ErrorViewModel">
+            <summary>
+            Data shown on the error page.
+            </summary>
+            <remarks>
+            The correlation identifier replaces the legacy error experience, which was a <c>MsgBox</c>
+            containing the raw ADO error description — meaningful to a developer standing at the machine,
+            and to nobody afterwards. The identifier ties what the user saw to the structured Serilog entry.
+            </remarks>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ErrorViewModel.RequestId">
+            <summary>Correlation identifier for the failed request.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ErrorViewModel.ShowRequestId">
+            <summary>Whether there is a request identifier worth showing.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ErrorViewModel.Message">
+            <summary>A message safe to show the user. Never contains exception detail.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.ItemTypeIndexViewModel">
+            <summary>Item type list screen. Replaces <c>frmNewItemType.frm</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ItemTypeIndexViewModel.Results">
+            <summary>The page of item types to display.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ItemTypeIndexViewModel.SearchTerm">
+            <summary>The active search term, if any.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.ItemTypeFormViewModel">
+            <summary>Item type create and edit form.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ItemTypeFormViewModel.Id">
+            <summary>The record identifier, or <c>null</c> when creating.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ItemTypeFormViewModel.Name">
+            <summary>The type name. Legacy column: <c>itemType</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ItemTypeFormViewModel.Group">
+            <summary>Optional higher-level grouping. Legacy column: <c>itemGroup</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ItemTypeFormViewModel.ShortName">
+            <summary>Optional abbreviation used on reports. Legacy column: <c>itemShortName</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ItemTypeFormViewModel.IsEdit">
+            <summary>Whether this form is editing an existing record.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.ItemIndexViewModel">
+            <summary>Item list screen. Replaces <c>frmNewItemName.frm</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ItemIndexViewModel.Results">
+            <summary>The page of items to display.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ItemIndexViewModel.SearchTerm">
+            <summary>The active search term, if any.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ItemIndexViewModel.ItemTypeId">
+            <summary>The active item type filter, if any.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ItemIndexViewModel.ItemTypes">
+            <summary>Item types available for filtering.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.ItemFormViewModel">
+            <summary>Item create and edit form.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ItemFormViewModel.Id">
+            <summary>The record identifier, or <c>null</c> when creating.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ItemFormViewModel.Name">
+            <summary>The item name. Legacy column: <c>itemName</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ItemFormViewModel.ItemTypeId">
+            <summary>The classification this item falls under.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ItemFormViewModel.ItemTypes">
+            <summary>Item types available for selection.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ItemFormViewModel.IsEdit">
+            <summary>Whether this form is editing an existing record.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.SupplierIndexViewModel">
+            <summary>Supplier list screen. Replaces <c>frmNewSupplier.frm</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.SupplierIndexViewModel.Results">
+            <summary>The page of suppliers to display.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.SupplierIndexViewModel.SearchTerm">
+            <summary>The active search term, if any.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.SupplierIndexViewModel.CountryId">
+            <summary>The active country filter, if any.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.SupplierIndexViewModel.Countries">
+            <summary>Countries available for filtering.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.SupplierFormViewModel">
+            <summary>Supplier create and edit form.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.SupplierFormViewModel.Id">
+            <summary>The record identifier, or <c>null</c> when creating.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.SupplierFormViewModel.Name">
+            <summary>The supplier name. Legacy column: <c>suppName</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.SupplierFormViewModel.Address">
+            <summary>Postal address. Legacy column: <c>suppAddress</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.SupplierFormViewModel.CountryId">
+            <summary>Country of origin. Legacy column: <c>suppCountry</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.SupplierFormViewModel.Countries">
+            <summary>Countries available for selection.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.SupplierFormViewModel.IsEdit">
+            <summary>Whether this form is editing an existing record.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.LoginViewModel">
+            <summary>Sign-in form. Migrated from <c>frmUserLogIn.frm</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.LoginViewModel.UserName">
+            <summary>The user name.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.LoginViewModel.Password">
+            <summary>The password.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.LoginViewModel.RememberMe">
+            <summary>Whether to issue a persistent authentication cookie.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.LoginViewModel.ReturnUrl">
+            <summary>Where to send the user after a successful sign-in.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.MasterDataDescriptor">
+            <summary>
+            Labels and route information that let one set of Razor views serve several master-data screens.
+            </summary>
+            <param name="Controller">The controller name, used to build action links.</param>
+            <param name="Title">Plural heading, e.g. "Countries".</param>
+            <param name="SingularTitle">Singular label, e.g. "Country".</param>
+            <param name="NameLabel">Label for the name field, e.g. "Country Name" or "PF No.".</param>
+            <param name="LegacyForm">The VB6 form this screen replaces, shown as provenance in the UI.</param>
+        </member>
+        <member name="M:SupplyChain.Web.ViewModels.MasterDataDescriptor.#ctor(System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            Labels and route information that let one set of Razor views serve several master-data screens.
+            </summary>
+            <param name="Controller">The controller name, used to build action links.</param>
+            <param name="Title">Plural heading, e.g. "Countries".</param>
+            <param name="SingularTitle">Singular label, e.g. "Country".</param>
+            <param name="NameLabel">Label for the name field, e.g. "Country Name" or "PF No.".</param>
+            <param name="LegacyForm">The VB6 form this screen replaces, shown as provenance in the UI.</param>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MasterDataDescriptor.Controller">
+            <summary>The controller name, used to build action links.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MasterDataDescriptor.Title">
+            <summary>Plural heading, e.g. "Countries".</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MasterDataDescriptor.SingularTitle">
+            <summary>Singular label, e.g. "Country".</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MasterDataDescriptor.NameLabel">
+            <summary>Label for the name field, e.g. "Country Name" or "PF No.".</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MasterDataDescriptor.LegacyForm">
+            <summary>The VB6 form this screen replaces, shown as provenance in the UI.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.NamedMasterDataIndexViewModel">
+            <summary>List screen for a master-data entity identified by a unique name.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.NamedMasterDataIndexViewModel.Descriptor">
+            <summary>Labels and routes for the screen being rendered.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.NamedMasterDataIndexViewModel.Results">
+            <summary>The page of records to display.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.NamedMasterDataIndexViewModel.SearchTerm">
+            <summary>The active search term, if any.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.NamedMasterDataFormViewModel">
+            <summary>Create and edit form for a master-data entity identified by a unique name.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.NamedMasterDataFormViewModel.Descriptor">
+            <summary>Labels and routes for the screen being rendered.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.NamedMasterDataFormViewModel.Id">
+            <summary>The record identifier, or <c>null</c> when creating.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.NamedMasterDataFormViewModel.Name">
+            <summary>The unique name.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.NamedMasterDataFormViewModel.IsEdit">
+            <summary>Whether this form is editing an existing record.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.MrrIndexViewModel">
+            <summary>Goods receipt list.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrIndexViewModel.Results">
+            <summary>The page of receipts to display.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrIndexViewModel.SearchTerm">
+            <summary>The active search term, if any.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrIndexViewModel.SupplierId">
+            <summary>The active supplier filter, if any.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrIndexViewModel.Suppliers">
+            <summary>Suppliers available for filtering.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.MrrFormViewModel">
+            <summary>
+            Goods receipt create and edit form.
+            </summary>
+            <remarks>
+            Replaces <c>frmMrrReceiveChallan.frm</c> and <c>frmMrrReceiveChallanOtherCurr.frm</c>.
+            </remarks>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrFormViewModel.Id">
+            <summary>The record identifier, or <c>null</c> when creating.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrFormViewModel.Number">
+            <summary>The issued document number, shown once the receipt exists.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrFormViewModel.SupplierId">
+            <summary>The supplier that delivered.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrFormViewModel.ReceiptDate">
+            <summary>When the goods were received.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrFormViewModel.Currency">
+            <summary>Currency the receipt is valued in.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrFormViewModel.Charges">
+            <summary>Charges added. Legacy column: <c>MRRCharge</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrFormViewModel.Discount">
+            <summary>Discount deducted. Legacy column: <c>MRRDiscount</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrFormViewModel.Lines">
+            <summary>The lines received.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrFormViewModel.QualityCertifiedBy">
+            <summary>Employee code certifying quality.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrFormViewModel.PreparedBy">
+            <summary>Employee code that prepared the receipt.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrFormViewModel.QuantityCheckedBy">
+            <summary>Employee code that checked quantity.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrFormViewModel.ManagerBy">
+            <summary>Approving manager.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrFormViewModel.SeniorManagerBy">
+            <summary>Senior manager.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrFormViewModel.Suppliers">
+            <summary>Suppliers available for selection.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrFormViewModel.Items">
+            <summary>Items available for selection on a line.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrFormViewModel.PurchaseOrders">
+            <summary>Purchase orders available for selection on a line.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrFormViewModel.IsEdit">
+            <summary>Whether this form is editing an existing receipt.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrFormViewModel.HasApproval">
+            <summary>Whether any approval field has been filled in.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.MrrLineInputModel">
+            <summary>One received line as posted by the form.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrLineInputModel.ItemId">
+            <summary>The item received.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrLineInputModel.PurchaseOrderId">
+            <summary>The purchase order this fulfils, where named.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrLineInputModel.Description">
+            <summary>Free-text description.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrLineInputModel.MaterialCode">
+            <summary>Material code.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrLineInputModel.PrNo">
+            <summary>Purchase requisition number.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrLineInputModel.OrderedQty">
+            <summary>Quantity the receipt was raised against.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrLineInputModel.ReceivedQty">
+            <summary>Quantity actually received.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrLineInputModel.QtyUnit">
+            <summary>Unit of measure.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrLineInputModel.UnitPrice">
+            <summary>Price per unit.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrLineInputModel.ChallanNo">
+            <summary>Challan number.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrLineInputModel.ChallanDate">
+            <summary>Challan date.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrLineInputModel.MainPf">
+            <summary>File number.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrLineInputModel.ContainerNo">
+            <summary>Container the goods arrived in.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MrrLineInputModel.Remarks">
+            <summary>Free-text note.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.PurchaseOrderBalanceViewModel">
+            <summary>Purchase order balance report. Replaces <c>rptPOBalanceQty.rpt</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderBalanceViewModel.PurchaseOrderId">
+            <summary>Restrict to one purchase order.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderBalanceViewModel.SupplierId">
+            <summary>Restrict to one supplier.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderBalanceViewModel.OverReceivedOnly">
+            <summary>Show only lines where more was received than ordered.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderBalanceViewModel.Suppliers">
+            <summary>Suppliers available for filtering.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderBalanceViewModel.PurchaseOrders">
+            <summary>Purchase orders available for filtering.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderBalanceViewModel.Balances">
+            <summary>The balances.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.PagerViewModel">
+            <summary>
+            Backs the shared paging control.
+            </summary>
+            <remarks>
+            Carries the query-string values so that paging links preserve the active filters. Losing the
+            filter on page two is a small bug that is easy to introduce and irritating to use.
+            </remarks>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PagerViewModel.PageNumber">
+            <summary>The one-based current page.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PagerViewModel.TotalPages">
+            <summary>Total pages available.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PagerViewModel.TotalCount">
+            <summary>Total records matching the query.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PagerViewModel.BasePath">
+            <summary>Base path that page links are built from, e.g. <c>/Suppliers/Index</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PagerViewModel.RouteValues">
+            <summary>Query-string values to carry across pages, excluding the page number.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PagerViewModel.HasPreviousPage">
+            <summary>Whether a previous page exists.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PagerViewModel.HasNextPage">
+            <summary>Whether a further page exists.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PagerViewModel.FirstShownPage">
+            <summary>First page number shown in the control, windowed around the current page.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PagerViewModel.LastShownPage">
+            <summary>Last page number shown in the control.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.ViewModels.PagerViewModel.BuildUrl(System.Int32)">
+            <summary>Builds the URL for a given page, preserving the active filters.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.PurchaseOrderIndexViewModel">
+            <summary>Purchase order list.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderIndexViewModel.Results">
+            <summary>The page of orders to display.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderIndexViewModel.SearchTerm">
+            <summary>The active search term, if any.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderIndexViewModel.SupplierId">
+            <summary>The active supplier filter, if any.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderIndexViewModel.Suppliers">
+            <summary>Suppliers available for filtering.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.PurchaseOrderFormViewModel">
+            <summary>
+            Purchase order create and edit form.
+            </summary>
+            <remarks>
+            Replaces <c>frmProformaInvoice.frm</c> and <c>frmProformaInvoiceOC.frm</c>. The legacy forms
+            built their line list in an <c>MSFlexGrid</c>; here the lines are posted as a collection.
+            </remarks>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderFormViewModel.Id">
+            <summary>The record identifier, or <c>null</c> when creating.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderFormViewModel.Number">
+            <summary>The issued document number, shown once the order exists.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderFormViewModel.SupplierId">
+            <summary>The supplier the order is placed with.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderFormViewModel.OrderDate">
+            <summary>The order date.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderFormViewModel.FromDate">
+            <summary>Start of the period the order covers. Legacy column: <c>FDate</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderFormViewModel.ToDate">
+            <summary>End of that period. Legacy column: <c>TDate</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderFormViewModel.Lines">
+            <summary>The order lines, posted as a collection.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderFormViewModel.Suppliers">
+            <summary>Suppliers available for selection.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderFormViewModel.Items">
+            <summary>Items available for selection on a line.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderFormViewModel.IsEdit">
+            <summary>Whether this form is editing an existing order.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.PurchaseOrderLineInputModel">
+            <summary>One line as posted by the form.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderLineInputModel.ItemId">
+            <summary>The item ordered.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderLineInputModel.Description">
+            <summary>Free-text description.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderLineInputModel.PrNo">
+            <summary>Purchase requisition number.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderLineInputModel.Quantity">
+            <summary>Quantity ordered.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderLineInputModel.QtyUnit">
+            <summary>Unit of measure.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderLineInputModel.UnitPrice">
+            <summary>Price per unit.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderLineInputModel.Currency">
+            <summary>Currency the price is expressed in.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PurchaseOrderLineInputModel.Condition">
+            <summary>Delivery or payment condition.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.BillRegisterViewModel">
+            <summary>The bill register screen. Replaces sixteen Crystal files.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.BillRegisterViewModel.Mode">
+            <summary>Which filter is applied.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.BillRegisterViewModel.Kind">
+            <summary>Restrict to cash or credit; blank covers both.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.BillRegisterViewModel.Reference">
+            <summary>The number, for the reference modes.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.BillRegisterViewModel.FromDate">
+            <summary>Start of the range.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.BillRegisterViewModel.ToDate">
+            <summary>End of the range.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.BillRegisterViewModel.PartyId">
+            <summary>The party, for the party mode.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.BillRegisterViewModel.AccountsHeadId">
+            <summary>The head, for the accounts-head mode.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.BillRegisterViewModel.HasRun">
+            <summary>Whether the form has been submitted.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.BillRegisterViewModel.Parties">
+            <summary>Parties available for selection.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.BillRegisterViewModel.AccountsHeads">
+            <summary>Accounts heads available for selection.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.BillRegisterViewModel.Report">
+            <summary>The report output, once run.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.BillRegisterViewModel.UsesDateRange">
+            <summary>Whether the chosen mode filters on a date range.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.BillRegisterViewModel.UsesReference">
+            <summary>Whether the chosen mode filters on a typed reference.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.ChequeRegisterViewModel">
+            <summary>The cheque register screen. Replaces three Crystal files.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ChequeRegisterViewModel.Mode">
+            <summary>Which filter is applied.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ChequeRegisterViewModel.ChequeBookId">
+            <summary>The book, for the book mode.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ChequeRegisterViewModel.FromDate">
+            <summary>Start of the issue-date range.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ChequeRegisterViewModel.ToDate">
+            <summary>End of that range.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ChequeRegisterViewModel.Beneficiary">
+            <summary>Matched against the beneficiary name.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ChequeRegisterViewModel.OutstandingOnly">
+            <summary>Restrict to cheques not yet honoured.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ChequeRegisterViewModel.HasRun">
+            <summary>Whether the form has been submitted.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ChequeRegisterViewModel.ChequeBooks">
+            <summary>Cheque books available for selection.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ChequeRegisterViewModel.Report">
+            <summary>The report output, once run.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.AuditReportViewModel">
+            <summary>The audit report screen. Replaces four Crystal files across three forms.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.AuditReportViewModel.Subject">
+            <summary>Which kind of document to report on.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.AuditReportViewModel.FromDate">
+            <summary>Start of the range.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.AuditReportViewModel.ToDate">
+            <summary>End of the range.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.AuditReportViewModel.DeletedOnly">
+            <summary>Restrict to deleted documents.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.AuditReportViewModel.HasRun">
+            <summary>Whether the form has been submitted.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.AuditReportViewModel.Report">
+            <summary>The report output, once run.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.ReportHeaderViewModel">
+            <summary>
+            The heading shown above a rendered report, with its export link.
+            </summary>
+            <remarks>
+            Shared by every report screen so the company name, criteria, row count and PDF button behave
+            identically. The legacy reports each carried their own header inside a hand-built <c>.rpt</c>
+            file, which is why they do not agree on layout.
+            </remarks>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ReportHeaderViewModel.Title">
+            <summary>Report title.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ReportHeaderViewModel.CompanyName">
+            <summary>Company name, or a description of the scope.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ReportHeaderViewModel.CompanyAddress">
+            <summary>Company address, where reporting on a single company.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ReportHeaderViewModel.Criteria">
+            <summary>The parameters in force.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ReportHeaderViewModel.RowCount">
+            <summary>Number of rows returned.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ReportHeaderViewModel.GeneratedAt">
+            <summary>When the report was run.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ReportHeaderViewModel.GeneratedBy">
+            <summary>Who ran it.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ReportHeaderViewModel.ExportPath">
+            <summary>Path the PDF export links to.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ReportHeaderViewModel.ExportRouteValues">
+            <summary>Query values carried to the export link, so it exports what is on screen.</summary>
+        </member>
+        <member name="M:SupplyChain.Web.ViewModels.ReportHeaderViewModel.From``1(SupplyChain.Application.Reports.ReportResult{``0},System.String,System.Collections.Generic.IDictionary{System.String,System.String})">
+            <summary>Builds a header from a report result.</summary>
+            <typeparam name="TRow">One row of output.</typeparam>
+            <param name="report">The report just run.</param>
+            <param name="exportPath">Path the export link points at.</param>
+            <param name="routeValues">Current query values, so the export matches the screen.</param>
+        </member>
+        <member name="M:SupplyChain.Web.ViewModels.ReportHeaderViewModel.BuildExportUrl">
+            <summary>Builds the export URL, preserving the filters currently applied.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.TransactionStatementViewModel">
+            <summary>
+            The transaction statement screen: its filters and, once run, its results.
+            </summary>
+            <remarks>
+            One screen replaces four VB6 forms. The mode is preset by the menu item the user chose, so
+            "Bill Wise Report" still opens on a bill number field, but there is one query behind all four.
+            </remarks>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.TransactionStatementViewModel.Mode">
+            <summary>Which filter is applied.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.TransactionStatementViewModel.Reference">
+            <summary>The bill, goods receipt or challan number, for the reference modes.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.TransactionStatementViewModel.FromDate">
+            <summary>Start of the date range.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.TransactionStatementViewModel.ToDate">
+            <summary>End of the date range.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.TransactionStatementViewModel.Type">
+            <summary>Restricts to one transaction type; <c>null</c> means all.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.TransactionStatementViewModel.StatementNo">
+            <summary>Restricts to one statement; <c>null</c> means all.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.TransactionStatementViewModel.AllCompanies">
+            <summary>Runs across every company rather than the active one.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.TransactionStatementViewModel.CanRunAllCompanies">
+            <summary>Whether the user may run the report across companies.</summary>
+            <remarks>
+            The legacy "All Company" checkbox was on every one of these forms with no permission
+            behind it. Here the checkbox is only rendered for users who hold the permission, and the
+            controller refuses the request regardless of what is posted.
+            </remarks>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.TransactionStatementViewModel.HasRun">
+            <summary>Whether the form has been submitted, so empty results mean "no rows" not "not run yet".</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.TransactionStatementViewModel.Report">
+            <summary>The report output, once run.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.TransactionStatementViewModel.ReferenceLabel">
+            <summary>The label for the reference field, which differs per mode.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.TransactionStatementViewModel.UsesReference">
+            <summary>Whether this mode filters on a document reference rather than a date range.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.TransactionStatementViewModel.Title">
+            <summary>The screen title, matching the legacy menu wording.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.TransactionStatementViewModel.LegacyForm">
+            <summary>The VB6 form this screen replaces, shown as provenance.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.PartyStatementViewModel">
+            <summary>
+            The party statement screen.
+            </summary>
+            <remarks>
+            Replaces <c>frmrptPartyStatement.frm</c> and its three Crystal files. The summary switch
+            corresponds to the legacy form's "Summary" checkbox, which chose a different report file.
+            </remarks>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PartyStatementViewModel.SupplierId">
+            <summary>Restrict to one supplier; blank covers every party.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PartyStatementViewModel.DateBasis">
+            <summary>Which date column the range applies to. Legacy label: "Query Type".</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PartyStatementViewModel.FromDate">
+            <summary>Start of the range.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PartyStatementViewModel.ToDate">
+            <summary>End of the range.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PartyStatementViewModel.Type">
+            <summary>Restrict to one transaction type; <c>null</c> means "All Type".</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PartyStatementViewModel.Summary">
+            <summary>Show totals per party instead of individual lines.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PartyStatementViewModel.AllCompanies">
+            <summary>Report across every company.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PartyStatementViewModel.CanRunAllCompanies">
+            <summary>Whether the user may report across companies.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PartyStatementViewModel.HasRun">
+            <summary>Whether the form has been submitted.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PartyStatementViewModel.Suppliers">
+            <summary>Parties available for selection.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PartyStatementViewModel.Detail">
+            <summary>Detail output, when not summarising.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.PartyStatementViewModel.SummaryReport">
+            <summary>Summary output, when summarising.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.MonthlyStatementViewModel">
+            <summary>The monthly statement screen. Replaces <c>frmrptMonthlyStatement.frm</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MonthlyStatementViewModel.Year">
+            <summary>The year to report.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MonthlyStatementViewModel.Type">
+            <summary>Restrict to one transaction type; <c>null</c> means "All Type".</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MonthlyStatementViewModel.AllCompanies">
+            <summary>Report across every company.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MonthlyStatementViewModel.CanRunAllCompanies">
+            <summary>Whether the user may report across companies.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MonthlyStatementViewModel.HasRun">
+            <summary>Whether the form has been submitted.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.MonthlyStatementViewModel.Report">
+            <summary>The report output, once run.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.StatementIndexViewModel">
+            <summary>Statement list.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.StatementIndexViewModel.Results">
+            <summary>The page of statements to display.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.StatementIndexViewModel.SearchTerm">
+            <summary>The active search term, if any.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.StatementIndexViewModel.Type">
+            <summary>The active type filter, if any.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.StatementFormViewModel">
+            <summary>
+            Statement create and edit form.
+            </summary>
+            <remarks>
+            Replaces <c>frmStatementCheque.frm</c>, the last screen in the system that wrote to a table
+            this application only read.
+            </remarks>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.StatementFormViewModel.StatementNo">
+            <summary>The statement number, once issued.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.StatementFormViewModel.Type">
+            <summary>How the entries were settled.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.StatementFormViewModel.TransactionDate">
+            <summary>When they were recorded.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.StatementFormViewModel.Currency">
+            <summary>Currency the amounts are recorded in.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.StatementFormViewModel.Lines">
+            <summary>The entries.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.StatementFormViewModel.Suppliers">
+            <summary>Suppliers available for selection.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.StatementFormViewModel.IsEdit">
+            <summary>Whether this form is editing an existing statement.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.StatementLineInputModel">
+            <summary>One statement entry as posted by the form.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.StatementLineInputModel.SupplierId">
+            <summary>The supplier the entry concerns.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.StatementLineInputModel.PartyName">
+            <summary>The party as recorded on the entry.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.StatementLineInputModel.BillNo">
+            <summary>Invoice number.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.StatementLineInputModel.BillDate">
+            <summary>Invoice date.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.StatementLineInputModel.MrrNo">
+            <summary>Goods receipt referenced.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.StatementLineInputModel.MrrDate">
+            <summary>Goods receipt date referenced.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.StatementLineInputModel.ChallanNo">
+            <summary>Challan referenced.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.StatementLineInputModel.ChallanDate">
+            <summary>Challan date referenced.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.StatementLineInputModel.Remark">
+            <summary>Free-text note.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.StatementLineInputModel.Amount">
+            <summary>The value of the entry.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.UserIndexViewModel">
+            <summary>User administration list. Replaces <c>frmCreateUser.frm</c>'s browse mode.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.UserIndexViewModel.Results">
+            <summary>The page of users to display.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.UserIndexViewModel.SearchTerm">
+            <summary>The active search term, if any.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.CreateUserViewModel">
+            <summary>Create-user form.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.CreateUserViewModel.UserName">
+            <summary>Sign-in name.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.CreateUserViewModel.FullName">
+            <summary>Display name.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.CreateUserViewModel.Password">
+            <summary>Initial password.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.CreateUserViewModel.ConfirmPassword">
+            <summary>Repeat of the password. The legacy form called this "Verify Password".</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.CreateUserViewModel.SelectedRoles">
+            <summary>Roles to assign.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.CreateUserViewModel.AvailableRoles">
+            <summary>Roles available for assignment.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.EditUserViewModel">
+            <summary>Edit-user form.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.EditUserViewModel.Id">
+            <summary>Identity user identifier.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.EditUserViewModel.UserName">
+            <summary>Sign-in name. Shown but not editable — it is the account's identity.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.EditUserViewModel.FullName">
+            <summary>Display name.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.EditUserViewModel.IsActive">
+            <summary>Whether the account may sign in. Legacy column: <c>UserStatus</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.EditUserViewModel.SelectedRoles">
+            <summary>Roles to assign.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.EditUserViewModel.AvailableRoles">
+            <summary>Roles available for assignment.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.ResetPasswordViewModel">
+            <summary>Administrator-initiated password reset.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ResetPasswordViewModel.Id">
+            <summary>Identity user identifier.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ResetPasswordViewModel.UserName">
+            <summary>Sign-in name, for display.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ResetPasswordViewModel.Password">
+            <summary>The new password.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ResetPasswordViewModel.ConfirmPassword">
+            <summary>Repeat of the new password.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.ChangePasswordViewModel">
+            <summary>A user changing their own password. Replaces <c>frmCreateModifyUser.frm</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ChangePasswordViewModel.CurrentPassword">
+            <summary>The existing password. The legacy form called this "Old Password".</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ChangePasswordViewModel.NewPassword">
+            <summary>The replacement password.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.ChangePasswordViewModel.ConfirmPassword">
+            <summary>Repeat of the replacement password.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.UserPermissionsViewModel">
+            <summary>Permission assignment screen. Replaces <c>frmPermissionMenu.frm</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.UserPermissionsViewModel.Id">
+            <summary>Identity user identifier.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.UserPermissionsViewModel.UserName">
+            <summary>Sign-in name, for display.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.UserPermissionsViewModel.SelectedPermissions">
+            <summary>Permissions granted directly to the user, as posted by the form.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.UserPermissionsViewModel.Grants">
+            <summary>Every catalogue permission with the user's current state, grouped by module.</summary>
+        </member>
+        <member name="T:SupplyChain.Web.ViewModels.UserCompanyAccessViewModel">
+            <summary>Company access screen. Replaces <c>frmPermissionCom.frm</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.UserCompanyAccessViewModel.Id">
+            <summary>Identity user identifier.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.UserCompanyAccessViewModel.UserName">
+            <summary>Sign-in name, for display.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.UserCompanyAccessViewModel.SelectedCompanyIds">
+            <summary>Companies granted, as posted by the form.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.UserCompanyAccessViewModel.DefaultCompanyId">
+            <summary>Which granted company is selected on sign-in.</summary>
+        </member>
+        <member name="P:SupplyChain.Web.ViewModels.UserCompanyAccessViewModel.Companies">
+            <summary>Every company with the user's current state.</summary>
+        </member>
+        <member name="T:Program">
+            <summary>Exposed so the integration test project can reference the entry-point assembly.</summary>
+        </member>
+    </members>
+</doc>

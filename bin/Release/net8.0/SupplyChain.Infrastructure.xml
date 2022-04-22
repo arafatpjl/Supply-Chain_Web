@@ -1,0 +1,1486 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SupplyChain.Infrastructure</name>
+    </assembly>
+    <members>
+        <member name="T:SupplyChain.Infrastructure.DependencyInjection">
+            <summary>
+            Registers persistence, identity and infrastructure services.
+            </summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.DependencyInjection.AddInfrastructure(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration)">
+            <summary>Registers the Infrastructure layer.</summary>
+            <param name="services">The service collection to add to.</param>
+            <param name="configuration">Application configuration, supplying the connection string.</param>
+            <returns>The same collection, for chaining.</returns>
+            <exception cref="T:System.InvalidOperationException">No default connection string is configured.</exception>
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Identity.ApplicationRole">
+            <summary>
+            A named collection of permissions.
+            </summary>
+            <remarks>
+            The legacy system had no roles. Permissions were assigned per user across three tables
+            (<c>Sys_User_MM</c>, <c>Sys_User_MS</c>, <c>Sys_User_MSS</c>) mirroring the three-level menu
+            tree, which made granting a new user "the same access as that one" a manual copying exercise.
+            Roles group permissions so that assignment is declarative; per-user grants remain available
+            for exceptions.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Identity.ApplicationRole.#ctor">
+            <summary>Initialises a new instance. Required by Identity.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Identity.ApplicationRole.#ctor(System.String)">
+            <summary>Initialises a new instance with the given name.</summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Identity.ApplicationRole.Description">
+            <summary>Human-readable explanation of what the role is for.</summary>
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Identity.ApplicationUser">
+            <summary>
+            An application user.
+            </summary>
+            <remarks>
+            <para>
+            Migrated from the legacy <c>Sys_User_Name</c> table, which stored passwords using
+            <c>EncryptIt</c> / <c>DecryptIt</c> from <c>modMain.bas</c> — a reversible, integer-keyed
+            transform, not a hash. Passwords were therefore recoverable from the database.
+            </para>
+            <para>
+            ASP.NET Core Identity replaces that with PBKDF2. Migrated users are created with
+            <see cref="P:SupplyChain.Infrastructure.Identity.ApplicationUser.MustChangePassword"/> set, so the legacy secret is never carried across. See
+            <c>docs/03-Database-Migration-Plan.md</c> §6.
+            </para>
+            </remarks>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Identity.ApplicationUser.FullName">
+            <summary>The user's full name, shown in the UI and written to audit columns.</summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Identity.ApplicationUser.IsActive">
+            <summary>Whether the account may sign in.</summary>
+            <remarks>Corresponds to the legacy <c>Sys_User_Name.UserStatus</c> column.</remarks>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Identity.ApplicationUser.MustChangePassword">
+            <summary>
+            Whether the user must set a new password before continuing.
+            </summary>
+            <remarks>Set for every user migrated from the legacy system.</remarks>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Identity.ApplicationUser.LegacyUserId">
+            <summary>The legacy <c>Sys_User_Name.UserID</c>, retained for traceability.</summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Identity.ApplicationUser.CreatedAt">
+            <summary>UTC time the account was created.</summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Identity.ApplicationUser.LastLoginAt">
+            <summary>UTC time of the most recent successful sign-in.</summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Identity.ApplicationUser.CompanyAccess">
+            <summary>Companies this user may work in.</summary>
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Identity.DefaultRolePermissions">
+            <summary>
+            The permissions each seeded role grants.
+            </summary>
+            <remarks>
+            <para>
+            Roles are a convenience the legacy application did not have: it stored one grant per user per
+            menu item, so every account was configured individually. These four roles cover the common
+            shapes, and anything unusual is granted directly to the user.
+            </para>
+            <para>
+            Defined once and used by both the seeder and the integration test fixture, so the permissions
+            exercised by tests cannot drift from the ones the application actually seeds.
+            </para>
+            </remarks>
+        </member>
+        <member name="F:SupplyChain.Infrastructure.Identity.DefaultRolePermissions.ByRole">
+            <summary>Role name to the permissions it grants.</summary>
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Identity.UserAdminService">
+            <summary>
+            User administration backed by ASP.NET Core Identity.
+            </summary>
+            <remarks>
+            <para>
+            Permissions are stored as claims — on roles for the common cases, and directly on a user where
+            a legacy account had an unusual combination. Both are emitted into the principal by Identity's
+            own claims factory, so no bespoke transformation is needed on each request.
+            </para>
+            <para>
+            Every change that affects access updates the user's security stamp, which invalidates the
+            sign-in cookie and forces the principal to be rebuilt. Without it a user would keep permissions
+            that had just been revoked until they happened to sign out.
+            </para>
+            </remarks>
+        </member>
+        <member name="F:SupplyChain.Infrastructure.Identity.UserAdminService.EnforcedPermissions">
+            <summary>Permissions with an endpoint enforcing them today.</summary>
+            <remarks>
+            The rest are assignable so that migrated grants survive, but nothing checks them until the
+            wave that builds the module. The permission screen shows which is which rather than
+            implying access that does not yet exist.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Identity.UserAdminService.#ctor(Microsoft.AspNetCore.Identity.UserManager{SupplyChain.Infrastructure.Identity.ApplicationUser},Microsoft.AspNetCore.Identity.RoleManager{SupplyChain.Infrastructure.Identity.ApplicationRole},SupplyChain.Infrastructure.Persistence.SupplyChainDbContext)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Identity.UserAdminService.SearchAsync(System.String,System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Identity.UserAdminService.GetAsync(System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Identity.UserAdminService.ListRolesAsync(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Identity.UserAdminService.CreateAsync(SupplyChain.Application.Security.CreateUserDto,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Identity.UserAdminService.UpdateAsync(System.Int32,SupplyChain.Application.Security.UpdateUserDto,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Identity.UserAdminService.ResetPasswordAsync(System.Int32,SupplyChain.Application.Security.ResetPasswordDto,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Identity.UserAdminService.ChangeOwnPasswordAsync(System.Int32,SupplyChain.Application.Security.ChangePasswordDto,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Identity.UserAdminService.GetPermissionsAsync(System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Identity.UserAdminService.SetPermissionsAsync(System.Int32,System.Collections.Generic.IReadOnlyList{System.String},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Identity.UserAdminService.GetCompanyAccessAsync(System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Identity.UserAdminService.SetCompanyAccessAsync(System.Int32,System.Collections.Generic.IReadOnlyList{System.Int32},System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Identity.UserCompanyAccess">
+            <summary>
+            Grants one user access to one company.
+            </summary>
+            <remarks>
+            Migrated from the legacy <c>Sys_User_Company</c> table. Crucially, the check moves from the UI
+            to the data layer: the legacy application merely hid companies a user could not access from
+            the picker on <c>frmSplash</c>, whereas here the grant is validated when the tenant context is
+            resolved, on every request.
+            </remarks>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Identity.UserCompanyAccess.UserId">
+            <summary>The user being granted access.</summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Identity.UserCompanyAccess.User">
+            <summary>The user being granted access.</summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Identity.UserCompanyAccess.CompanyId">
+            <summary>The company access is granted to.</summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Identity.UserCompanyAccess.Company">
+            <summary>The company access is granted to.</summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Identity.UserCompanyAccess.IsDefault">
+            <summary>Whether this is the company selected by default at sign-in.</summary>
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Legacy.LegacyCipher">
+            <summary>
+            The obfuscation scheme used by the VB6 application, provided for migration only.
+            </summary>
+            <remarks>
+            <para>
+            <c>modMain.bas</c> defined a matched pair:
+            </para>
+            <code>
+            Function EncryptIt(s As String, Crack As Integer) As String
+                For i = 1 To Len(s)
+                    Z = Z + Chr(Asc(Mid(s, i, 1)) + Crack)
+                Next i
+            End Function
+            </code>
+            <para>
+            It is a Caesar shift, called throughout the application with a shift of 11. It is not
+            encryption and not a hash: every stored password is trivially recoverable, and the shift is a
+            literal in the source.
+            </para>
+            <para>
+            This class exists so the extract-transform-load can read legacy values. Nothing in the
+            application protects anything with it. Passwords migrate to PBKDF2 through ASP.NET Core
+            Identity, or to a forced reset — see <c>docs/03-Database-Migration-Plan.md</c> §6.
+            </para>
+            </remarks>
+        </member>
+        <member name="F:SupplyChain.Infrastructure.Legacy.LegacyCipher.DefaultShift">
+            <summary>The shift used everywhere in the VB6 source.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Legacy.LegacyCipher.Decrypt(System.String,System.Int32)">
+            <summary>Reverses the legacy transform.</summary>
+            <param name="value">The stored value.</param>
+            <param name="shift">The shift; the legacy application always used 11.</param>
+            <returns>The original plaintext.</returns>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Legacy.LegacyCipher.Encrypt(System.String,System.Int32)">
+            <summary>
+            Applies the legacy transform.
+            </summary>
+            <remarks>
+            Provided only so migration tooling can match against values still stored in the legacy
+            databases. Never use it to store anything.
+            </remarks>
+        </member>
+        <member name="F:SupplyChain.Infrastructure.Legacy.LegacyCipher.DetectionIsUndecidable">
+            <summary>
+            Whether a stored value can be told apart from its shifted form automatically.
+            </summary>
+            <remarks>
+            <para>
+            It cannot, and this method documents why rather than pretending otherwise. Shifting
+            <c>jdoe</c> by 11 gives <c>uozp</c> — still lowercase letters, still a plausible user
+            name. Shifting <c>SOFT2O12</c> gives <c>^ZQ_=Z&lt;=</c>, which is unusual but entirely
+            printable. No character-class test separates the two reliably.
+            </para>
+            <para>
+            This matters because the VB6 source is inconsistent about whether user names are stored
+            shifted: <c>modSub.addUserName</c> decrypts them when filling a combo box,
+            <c>modPermission.prcAddUserName</c> has that same call commented out, <c>frmCreateUser</c>
+            shifts the name to search for it, and <c>frmUserLogIn</c> compares the typed name against
+            the stored value unshifted. Those four cannot all be right.
+            </para>
+            <para>
+            The extract-transform-load therefore resolves it empirically, once per legacy database:
+            take an account whose sign-in name is known, compare it against both interpretations of
+            the stored value, and apply whichever matches to every row in that database. Guessing per
+            row would risk silently corrupting user names.
+            </para>
+            </remarks>
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Legacy.LegacyPermissionMap">
+            <summary>
+            Translates legacy menu grants into permissions.
+            </summary>
+            <remarks>
+            <para>
+            The VB6 application stored one row per user per menu item across <c>Sys_User_MM</c>,
+            <c>Sys_User_MS</c> and <c>Sys_User_MSS</c>, keyed by the VB menu control's name. This map is
+            how a migrated user keeps the access they had.
+            </para>
+            <para>
+            The mapping is coarser in one direction and finer in another. Coarser, because a single menu
+            item such as <c>mnuNewSupplier</c> covers viewing, creating, editing and deleting — the legacy
+            application had no concept of operation-level permission. Finer, because permissions are
+            checked on endpoints rather than menus, so a granted menu no longer implies its siblings are
+            reachable.
+            </para>
+            </remarks>
+        </member>
+        <member name="F:SupplyChain.Infrastructure.Legacy.LegacyPermissionMap.MenuToPermissions">
+            <summary>
+            Maps a VB6 menu control name to the permissions it should grant.
+            </summary>
+            <remarks>
+            Names come from <c>frmMDIMain.frm</c> and the visibility routines in
+            <c>modPermission.bas</c>. Comparison is case-insensitive because the legacy code compares
+            menu names inconsistently — <c>mnurptstore</c> and <c>mnurptStore</c> both appear.
+            </remarks>
+        </member>
+        <member name="F:SupplyChain.Infrastructure.Legacy.LegacyPermissionMap.LeakedByInvisibleAll">
+            <summary>
+            Menu items that <c>prcMenuInvisibleAll</c> leaves visible to every non-administrator.
+            </summary>
+            <remarks>
+            <para>
+            <c>prcMenuInvisibleAll</c> exists to hide every menu before per-user grants selectively
+            restore them. Eleven of its assignments set <c>.Visible = True</c> instead, including
+            Purchase Order entry, MRR entry, the user-to-company permission screen and the data-lock
+            screen. Each becomes reachable as soon as its parent menu is granted, whatever the user's
+            own grant for the item says.
+            </para>
+            <para>
+            These are listed so the migration does not reproduce the exposure. A user's permissions are
+            built from their recorded grants only; access they had solely through this defect is not
+            carried over, and the extract-transform-load reports anyone affected.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Legacy.LegacyPermissionMap.Translate(System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Translates a set of legacy menu grants into the permissions they imply.
+            </summary>
+            <param name="grantedMenuNames">Menu control names from <c>Sys_User_MM</c>/<c>MS</c>/<c>MSS</c>.</param>
+            <returns>The distinct permissions, ordered for stable comparison.</returns>
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Configurations.BankConfiguration">
+            <summary>Maps <see cref="T:SupplyChain.Domain.Entities.MasterData.Bank"/>. Legacy table: <c>New_Bank</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.Configurations.BankConfiguration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.Configurations.BankConfiguration.NameMaxLength">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Configurations.BillConfiguration">
+            <summary>Maps <see cref="T:SupplyChain.Domain.Entities.Accounts.Bill"/>. Legacy table: <c>BillMain</c>.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Configurations.BillConfiguration.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{SupplyChain.Domain.Entities.Accounts.Bill})">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Configurations.BillLineConfiguration">
+            <summary>Maps <see cref="T:SupplyChain.Domain.Entities.Accounts.BillLine"/>. Legacy table: <c>BillDetails</c>.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Configurations.BillLineConfiguration.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{SupplyChain.Domain.Entities.Accounts.BillLine})">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Configurations.ChequeBookConfiguration">
+            <summary>Maps <see cref="T:SupplyChain.Domain.Entities.Accounts.ChequeBook"/>. Legacy table: <c>Cheque_Master_Table</c>.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Configurations.ChequeBookConfiguration.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{SupplyChain.Domain.Entities.Accounts.ChequeBook})">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Configurations.ChequeConfiguration">
+            <summary>Maps <see cref="T:SupplyChain.Domain.Entities.Accounts.Cheque"/>. Legacy table: <c>Cheque_Child_Table</c>.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Configurations.ChequeConfiguration.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{SupplyChain.Domain.Entities.Accounts.Cheque})">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Configurations.ApplicationUserConfiguration">
+            <summary>
+            Maps <see cref="T:SupplyChain.Infrastructure.Identity.ApplicationUser"/>, migrated from the legacy <c>Sys_User_Name</c> table.
+            </summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Configurations.ApplicationUserConfiguration.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{SupplyChain.Infrastructure.Identity.ApplicationUser})">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Configurations.CashCreditStatementConfiguration">
+            <summary>
+            Maps <see cref="T:SupplyChain.Domain.Entities.Statements.CashCreditStatement"/>. Legacy table: <c>Statement_of_Cash_and_Credit</c>.
+            </summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Configurations.CashCreditStatementConfiguration.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{SupplyChain.Domain.Entities.Statements.CashCreditStatement})">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Configurations.CompanyConfiguration">
+            <summary>
+            Maps <see cref="T:SupplyChain.Domain.Entities.Company"/>, migrated from the legacy <c>Company_Information</c> table.
+            </summary>
+            <remarks>
+            Configuration is kept in Fluent API classes rather than attributes on the entities, so the
+            Domain layer stays free of persistence concerns.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Configurations.CompanyConfiguration.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{SupplyChain.Domain.Entities.Company})">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Configurations.DocumentSequenceConfiguration">
+            <summary>
+            Maps <see cref="T:SupplyChain.Domain.Entities.DocumentSequence"/>, consolidating four legacy numbering tables.
+            </summary>
+            <remarks>
+            Replaces <c>NEW_PI</c>, <c>New_MRR</c>, <c>New_SCID</c> and <c>New_ACCID</c>, which each stored
+            the same sequence/year/formatted-string triple for a different document type.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Configurations.DocumentSequenceConfiguration.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{SupplyChain.Domain.Entities.DocumentSequence})">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Configurations.NamedEntityConfiguration`1">
+            <summary>
+            Shared mapping for master-data entities identified by a unique name.
+            </summary>
+            <typeparam name="T">The entity type.</typeparam>
+            <remarks>
+            <para>
+            Every one of these tables existed in all eighteen legacy databases, kept in step by forms that
+            executed the same INSERT up to seventeen times. Here there is one row per record, and the
+            unique index makes the duplicate check the legacy forms performed in code a guarantee of the
+            schema.
+            </para>
+            <para>
+            None of these entities is company-scoped. That is the substantive finding from discovery:
+            master data was never genuinely per-company, and the eighteen-database split was an accident
+            the application spent most of its master-data code working around.
+            </para>
+            </remarks>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.Configurations.NamedEntityConfiguration`1.TableName">
+            <summary>The table name.</summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.Configurations.NamedEntityConfiguration`1.NameMaxLength">
+            <summary>The maximum name length, matching the domain rule.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Configurations.NamedEntityConfiguration`1.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{`0})">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Configurations.CountryConfiguration">
+            <summary>Maps <see cref="T:SupplyChain.Domain.Entities.MasterData.Country"/>. Legacy table: <c>new_Country</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.Configurations.CountryConfiguration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.Configurations.CountryConfiguration.NameMaxLength">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Configurations.PfNumberConfiguration">
+            <summary>Maps <see cref="T:SupplyChain.Domain.Entities.MasterData.PfNumber"/>. Legacy table: <c>new_PF_No</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.Configurations.PfNumberConfiguration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.Configurations.PfNumberConfiguration.NameMaxLength">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Configurations.PartyConfiguration">
+            <summary>Maps <see cref="T:SupplyChain.Domain.Entities.MasterData.Party"/>. Legacy table: <c>Party</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.Configurations.PartyConfiguration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.Configurations.PartyConfiguration.NameMaxLength">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Configurations.AccountsHeadConfiguration">
+            <summary>Maps <see cref="T:SupplyChain.Domain.Entities.MasterData.AccountsHead"/>. Legacy table: <c>AccountsHead</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.Configurations.AccountsHeadConfiguration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.Configurations.AccountsHeadConfiguration.NameMaxLength">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Configurations.ItemTypeConfiguration">
+            <summary>Maps <see cref="T:SupplyChain.Domain.Entities.MasterData.ItemType"/>. Legacy table: <c>new_Item_Type</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.Configurations.ItemTypeConfiguration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.Configurations.ItemTypeConfiguration.NameMaxLength">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Configurations.ItemTypeConfiguration.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{SupplyChain.Domain.Entities.MasterData.ItemType})">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Configurations.ItemConfiguration">
+            <summary>Maps <see cref="T:SupplyChain.Domain.Entities.MasterData.Item"/>. Legacy table: <c>new_Item_Name</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.Configurations.ItemConfiguration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.Configurations.ItemConfiguration.NameMaxLength">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Configurations.ItemConfiguration.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{SupplyChain.Domain.Entities.MasterData.Item})">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Configurations.SupplierConfiguration">
+            <summary>Maps <see cref="T:SupplyChain.Domain.Entities.MasterData.Supplier"/>. Legacy table: <c>new_Supplier</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.Configurations.SupplierConfiguration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.Configurations.SupplierConfiguration.NameMaxLength">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Configurations.SupplierConfiguration.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{SupplyChain.Domain.Entities.MasterData.Supplier})">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Configurations.PurchaseOrderConfiguration">
+            <summary>Maps <see cref="T:SupplyChain.Domain.Entities.Purchasing.PurchaseOrder"/>. Legacy tables: <c>Pro_Inv_Main</c> and <c>Pro_Inv_MainOC</c>.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Configurations.PurchaseOrderConfiguration.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{SupplyChain.Domain.Entities.Purchasing.PurchaseOrder})">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Configurations.PurchaseOrderLineConfiguration">
+            <summary>Maps <see cref="T:SupplyChain.Domain.Entities.Purchasing.PurchaseOrderLine"/>. Legacy tables: <c>Pro_Inv_Sub</c> and <c>Pro_Inv_SubOC</c>.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Configurations.PurchaseOrderLineConfiguration.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{SupplyChain.Domain.Entities.Purchasing.PurchaseOrderLine})">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Configurations.MrrConfiguration">
+            <summary>Maps <see cref="T:SupplyChain.Domain.Entities.Receiving.Mrr"/>. Legacy tables: <c>Mrr_Challan_Main</c> and <c>Mrr_Challan_MainOC</c>.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Configurations.MrrConfiguration.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{SupplyChain.Domain.Entities.Receiving.Mrr})">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Configurations.MrrLineConfiguration">
+            <summary>Maps <see cref="T:SupplyChain.Domain.Entities.Receiving.MrrLine"/>. Legacy tables: <c>MRR_Challan_Sub</c> and <c>MRR_Challan_SubOC</c>.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Configurations.MrrLineConfiguration.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{SupplyChain.Domain.Entities.Receiving.MrrLine})">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Configurations.MrrApprovalConfiguration">
+            <summary>Maps <see cref="T:SupplyChain.Domain.Entities.Receiving.MrrApproval"/>. Legacy table: <c>Signature</c>.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Configurations.MrrApprovalConfiguration.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{SupplyChain.Domain.Entities.Receiving.MrrApproval})">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Configurations.UserCompanyAccessConfiguration">
+            <summary>
+            Maps <see cref="T:SupplyChain.Infrastructure.Identity.UserCompanyAccess"/>, migrated from the legacy <c>Sys_User_Company</c> table.
+            </summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Configurations.UserCompanyAccessConfiguration.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{SupplyChain.Infrastructure.Identity.UserCompanyAccess})">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.DesignTimeDbContextFactory">
+            <summary>
+            Builds a <see cref="T:SupplyChain.Infrastructure.Persistence.SupplyChainDbContext"/> for the EF Core command-line tools.
+            </summary>
+            <remarks>
+            The runtime context is constructed by dependency injection and takes an
+            <see cref="T:SupplyChain.Application.Abstractions.ITenantContext"/> resolved from the current request, which does not exist at design
+            time. This factory supplies a null tenant so that <c>dotnet ef migrations</c> and
+            <c>dotnet ef database update</c> can build the model.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.DesignTimeDbContextFactory.CreateDbContext(System.String[])">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.DesignTimeDbContextFactory.DesignTimeTenantContext">
+            <summary>A tenant context with no company selected, used only by the EF tools.</summary>
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.DocumentNumberAllocator">
+            <summary>
+            Allocates document numbers under a row lock, so concurrent callers queue rather than collide.
+            </summary>
+            <remarks>
+            <para>
+            This is the replacement for the legacy <c>fncNewID2</c> in <c>ModBill.bas</c>:
+            </para>
+            <code>
+            Mysql = "Select Max(SupplierID) AS NewID From Supplier_Information;"
+            If IsNull(RS(0).Value) Then fncNewID2 = 1 Else fncNewID2 = RS(0).Value + 1
+            </code>
+            <para>
+            That read was unlocked and untransacted, so two operators saving at the same moment both read
+            the same maximum and both wrote the same number. The desktop application's low concurrency hid
+            the defect; a web application would not.
+            </para>
+            <para>
+            Here the counter row is read with <c>UPDLOCK, HOLDLOCK</c> inside a transaction, so the second
+            caller blocks until the first commits. See <c>docs/03-Database-Migration-Plan.md</c> §3.3.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.DocumentNumberAllocator.#ctor(SupplyChain.Infrastructure.Persistence.SupplyChainDbContext)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.DocumentNumberAllocator.AllocateAsync(System.Int32,SupplyChain.Domain.Enums.DocumentType,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.DocumentNumberAllocator.LoadLockedSequenceAsync(System.Int32,SupplyChain.Domain.Enums.DocumentType,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Reads the counter row with an update lock held to the end of the transaction.
+            </summary>
+            <remarks>
+            Raw SQL is used because EF Core has no provider-agnostic way to express a locking hint.
+            Parameters are passed through interpolation, which EF converts into
+            <see cref="T:Microsoft.Data.SqlClient.SqlParameter"/> instances rather than string
+            concatenation — the legacy code built every statement by concatenation, which is why the
+            application was comprehensively SQL-injectable.
+            </remarks>
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.DocumentNumberGenerator">
+            <summary>
+            Issues document numbers from a locked sequence row.
+            </summary>
+            <remarks>
+            <para>
+            Replaces <c>fncNewID</c>, <c>fncNewID2</c> and <c>fncNewID3</c> in the legacy modules, which
+            allocated with <c>MAX(id) + 1</c> across roughly thirty entity types, with no lock and no
+            transaction. Two concurrent saves produced the same number.
+            </para>
+            <para>
+            On SQL Server the sequence row is read <c>WITH (UPDLOCK, HOLDLOCK)</c>, so a second caller
+            blocks until the first commits. Other providers fall back to a tracked read: the unique index
+            on company, type and year still prevents duplicates, and the write fails rather than silently
+            duplicating.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.DocumentNumberGenerator.#ctor(SupplyChain.Infrastructure.Persistence.SupplyChainDbContext)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.DocumentNumberGenerator.NextAsync(SupplyChain.Domain.Enums.DocumentType,System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Interceptors.AuditableEntityInterceptor">
+            <summary>
+            Stamps audit columns and converts deletions into soft deletions on save.
+            </summary>
+            <remarks>
+            <para>
+            Replaces several hundred lines of hand-written assignment in the VB6 forms. Nearly every
+            INSERT in the legacy codebase carried <c>USERID</c>, <c>PCName</c>, <c>EntryDate</c> and
+            <c>EntryTime</c> spelled out by hand — with inconsistent casing, occasionally in a different
+            column order, and sometimes omitted altogether.
+            </para>
+            <para>
+            Centralising it here means audit data cannot be forgotten, and the legacy inconsistency
+            disappears by construction.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Interceptors.AuditableEntityInterceptor.#ctor(SupplyChain.Application.Abstractions.ICurrentUser,SupplyChain.Application.Abstractions.IDateTimeProvider)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Interceptors.AuditableEntityInterceptor.SavingChanges(Microsoft.EntityFrameworkCore.Diagnostics.DbContextEventData,Microsoft.EntityFrameworkCore.Diagnostics.InterceptionResult{System.Int32})">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Interceptors.AuditableEntityInterceptor.SavingChangesAsync(Microsoft.EntityFrameworkCore.Diagnostics.DbContextEventData,Microsoft.EntityFrameworkCore.Diagnostics.InterceptionResult{System.Int32},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Interceptors.DocumentNumberSyncInterceptor">
+            <summary>
+            Keeps the searchable copy of a document number in step with the value object it comes from.
+            </summary>
+            <remarks>
+            <para>
+            A document number is stored as its parts — type, year and sequence — so the sequence can be
+            queried directly. Searching and uniquely constraining the printed form as well needs it as one
+            string, and rebuilding it in SQL on every query would defeat the index.
+            </para>
+            <para>
+            Setting it here rather than at each call site means it cannot drift: any code path that saves a
+            purchase order gets a correct value, including ones written later.
+            </para>
+            </remarks>
+        </member>
+        <member name="F:SupplyChain.Infrastructure.Persistence.Interceptors.DocumentNumberSyncInterceptor.PropertyName">
+            <summary>The shadow property holding the formatted number.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Interceptors.DocumentNumberSyncInterceptor.SavingChanges(Microsoft.EntityFrameworkCore.Diagnostics.DbContextEventData,Microsoft.EntityFrameworkCore.Diagnostics.InterceptionResult{System.Int32})">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Interceptors.DocumentNumberSyncInterceptor.SavingChangesAsync(Microsoft.EntityFrameworkCore.Diagnostics.DbContextEventData,Microsoft.EntityFrameworkCore.Diagnostics.InterceptionResult{System.Int32},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Migrations.InitialCreate">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Migrations.InitialCreate.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Migrations.InitialCreate.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Migrations.InitialCreate.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Migrations.MasterData">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Migrations.MasterData.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Migrations.MasterData.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Migrations.MasterData.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Migrations.CashCreditStatements">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Migrations.CashCreditStatements.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Migrations.CashCreditStatements.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Migrations.CashCreditStatements.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Migrations.PurchaseOrders">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Migrations.PurchaseOrders.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Migrations.PurchaseOrders.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Migrations.PurchaseOrders.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Migrations.GoodsReceipts">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Migrations.GoodsReceipts.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Migrations.GoodsReceipts.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Migrations.GoodsReceipts.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Migrations.Accounts">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Migrations.Accounts.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Migrations.Accounts.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Migrations.Accounts.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Migrations.StatementWritePath">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Migrations.StatementWritePath.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Migrations.StatementWritePath.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Migrations.StatementWritePath.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Repositories.BankRepository">
+            <inheritdoc cref="T:SupplyChain.Domain.Interfaces.IBankRepository" />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.BankRepository.#ctor(SupplyChain.Infrastructure.Persistence.SupplyChainDbContext)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.BankRepository.IsReferencedAsync(System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+            <remarks>A bank cannot be removed while any cheque book is issued against it.</remarks>
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Repositories.BillRepository">
+            <inheritdoc cref="T:SupplyChain.Domain.Interfaces.IBillRepository" />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.BillRepository.#ctor(SupplyChain.Infrastructure.Persistence.SupplyChainDbContext)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.BillRepository.GetWithLinesAsync(System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.BillRepository.SearchAsync(System.String,System.Nullable{System.Int32},System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Repositories.ChequeBookRepository">
+            <inheritdoc cref="T:SupplyChain.Domain.Interfaces.IChequeBookRepository" />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.ChequeBookRepository.#ctor(SupplyChain.Infrastructure.Persistence.SupplyChainDbContext)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.ChequeBookRepository.GetWithChequesAsync(System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.ChequeBookRepository.SearchAsync(System.String,System.Nullable{System.Int32},System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.ChequeBookRepository.BookNumberExistsAsync(System.Int32,System.String,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Repositories.CashCreditStatementRepository">
+            <inheritdoc cref="T:SupplyChain.Domain.Interfaces.ICashCreditStatementRepository" />
+            <remarks>
+            The soft-delete filter is applied by the DbContext convention, so every query here sees live
+            lines only. Superseded and deleted lines remain in the table and are reachable through
+            <c>IgnoreQueryFilters</c> — which the audit report uses.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.CashCreditStatementRepository.#ctor(SupplyChain.Infrastructure.Persistence.SupplyChainDbContext)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.CashCreditStatementRepository.GetStatementAsync(System.Int32,SupplyChain.Domain.Enums.TransactionType,System.DateOnly,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.CashCreditStatementRepository.SearchAsync(System.String,System.Nullable{SupplyChain.Domain.Enums.TransactionType},System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.CashCreditStatementRepository.BillNoExistsAsync(System.String,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Repositories.CompanyRepository">
+            <inheritdoc cref="T:SupplyChain.Domain.Interfaces.ICompanyRepository" />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.CompanyRepository.#ctor(SupplyChain.Infrastructure.Persistence.SupplyChainDbContext)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.CompanyRepository.GetByShortCodeAsync(System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.CompanyRepository.ListActiveAsync(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Repositories.CountryRepository">
+            <inheritdoc cref="T:SupplyChain.Domain.Interfaces.ICountryRepository" />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.CountryRepository.#ctor(SupplyChain.Infrastructure.Persistence.SupplyChainDbContext)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.CountryRepository.IsReferencedAsync(System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+            <remarks>A country cannot be removed while any supplier is registered against it.</remarks>
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Repositories.PfNumberRepository">
+            <inheritdoc cref="T:SupplyChain.Domain.Interfaces.IPfNumberRepository" />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.PfNumberRepository.#ctor(SupplyChain.Infrastructure.Persistence.SupplyChainDbContext)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Repositories.PartyRepository">
+            <inheritdoc cref="T:SupplyChain.Domain.Interfaces.IPartyRepository" />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.PartyRepository.#ctor(SupplyChain.Infrastructure.Persistence.SupplyChainDbContext)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Repositories.AccountsHeadRepository">
+            <inheritdoc cref="T:SupplyChain.Domain.Interfaces.IAccountsHeadRepository" />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.AccountsHeadRepository.#ctor(SupplyChain.Infrastructure.Persistence.SupplyChainDbContext)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Repositories.ItemTypeRepository">
+            <inheritdoc cref="T:SupplyChain.Domain.Interfaces.IItemTypeRepository" />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.ItemTypeRepository.#ctor(SupplyChain.Infrastructure.Persistence.SupplyChainDbContext)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.ItemTypeRepository.IsReferencedAsync(System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+            <remarks>An item type cannot be removed while items are still classified under it.</remarks>
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Repositories.ItemRepository">
+            <inheritdoc cref="T:SupplyChain.Domain.Interfaces.IItemRepository" />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.ItemRepository.#ctor(SupplyChain.Infrastructure.Persistence.SupplyChainDbContext)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.ItemRepository.SearchWithTypeAsync(System.String,System.Nullable{System.Int32},System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Repositories.SupplierRepository">
+            <inheritdoc cref="T:SupplyChain.Domain.Interfaces.ISupplierRepository" />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.SupplierRepository.#ctor(SupplyChain.Infrastructure.Persistence.SupplyChainDbContext)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.SupplierRepository.SearchWithCountryAsync(System.String,System.Nullable{System.Int32},System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Repositories.MrrRepository">
+            <inheritdoc cref="T:SupplyChain.Domain.Interfaces.IMrrRepository" />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.MrrRepository.#ctor(SupplyChain.Infrastructure.Persistence.SupplyChainDbContext)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.MrrRepository.GetWithLinesAsync(System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.MrrRepository.SearchAsync(System.String,System.Nullable{System.Int32},System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.MrrRepository.GetPurchaseOrderBalancesAsync(System.Nullable{System.Int32},System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Repositories.NamedEntityRepository`1">
+            <summary>
+            EF Core implementation of <see cref="T:SupplyChain.Domain.Interfaces.INamedEntityRepository`1"/>.
+            </summary>
+            <typeparam name="T">The entity type.</typeparam>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.NamedEntityRepository`1.#ctor(SupplyChain.Infrastructure.Persistence.SupplyChainDbContext)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.NamedEntityRepository`1.GetByNameAsync(System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.NamedEntityRepository`1.SearchAsync(System.String,System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.NamedEntityRepository`1.IsReferencedAsync(System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+            <remarks>
+            The default is "nothing references this". Types that are referenced override it. As later
+            waves introduce purchase orders, goods receipts and bills, the overrides grow — which is
+            why the check lives behind an interface rather than being inferred from a SQL error code
+            as it was in the VB6 application.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.NamedEntityRepository`1.ApplyNameFilter(System.Linq.IQueryable{`0},System.String)">
+            <summary>Applies a case-insensitive "contains" filter on the name.</summary>
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Repositories.PurchaseOrderRepository">
+            <inheritdoc cref="T:SupplyChain.Domain.Interfaces.IPurchaseOrderRepository" />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.PurchaseOrderRepository.#ctor(SupplyChain.Infrastructure.Persistence.SupplyChainDbContext)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.PurchaseOrderRepository.GetWithLinesAsync(System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.PurchaseOrderRepository.SearchAsync(System.String,System.Nullable{System.Int32},System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.PurchaseOrderRepository.NumberExistsAsync(System.Int32,System.String,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.PurchaseOrderRepository.FindReferencingMrrNumbersAsync(System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+            <remarks>
+            The legacy guard ran this query and refused with "This PO already uses in MRR No - (…)".
+            Wave 5 wired the guard with a stub because goods receipts did not exist yet; this is the
+            real implementation, and the service and its tests were unchanged by it.
+            </remarks>
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Repositories.Repository`1">
+            <summary>
+            EF Core implementation of <see cref="T:SupplyChain.Domain.Interfaces.IRepository`1"/>.
+            </summary>
+            <typeparam name="T">The entity type.</typeparam>
+            <remarks>
+            <para>
+            Every query here runs through the context's global query filters, so tenant scoping and
+            soft-delete exclusion are automatic. That is the point of routing reads through repositories:
+            the legacy code concatenated a <c>CompanyID = </c> clause by hand into each of hundreds of SQL
+            strings, and any statement that forgot to leaked another company's data.
+            </para>
+            <para>
+            Writes are staged only. Nothing reaches the database until
+            <see cref="M:SupplyChain.Domain.Interfaces.IUnitOfWork.SaveChangesAsync(System.Threading.CancellationToken)"/> is called, which is what makes multi-table
+            operations atomic.
+            </para>
+            </remarks>
+        </member>
+        <member name="F:SupplyChain.Infrastructure.Persistence.Repositories.Repository`1.Context">
+            <summary>The underlying context.</summary>
+        </member>
+        <member name="F:SupplyChain.Infrastructure.Persistence.Repositories.Repository`1.Set">
+            <summary>The entity set being served.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.Repository`1.#ctor(SupplyChain.Infrastructure.Persistence.SupplyChainDbContext)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.Repository`1.GetByIdAsync(System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.Repository`1.ListAsync(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.Repository`1.ListAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.Repository`1.AnyAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.Repository`1.CountAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.Repository`1.AddAsync(`0,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.Repository`1.Update(`0)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Repositories.Repository`1.Remove(`0)">
+            <inheritdoc />
+            <remarks>
+            For entities implementing <see cref="T:SupplyChain.Domain.Common.ISoftDeletable"/> this is converted into a flag update
+            by <see cref="T:SupplyChain.Infrastructure.Persistence.Interceptors.AuditableEntityInterceptor"/>, preserving the legacy
+            <c>DeleteRow</c> behaviour that the audit reports depend on.
+            </remarks>
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.Seed.DatabaseSeeder">
+            <summary>
+            Applies pending migrations and seeds the minimum data needed to sign in.
+            </summary>
+            <remarks>
+            <para>
+            Wave 0 seeds one company and one administrator so the application is demonstrable without a
+            production database. The full extract-transform-load from the eighteen legacy databases is a
+            separate concern — see <c>docs/03-Database-Migration-Plan.md</c> §4.
+            </para>
+            <para>
+            Seeding is idempotent: it checks before inserting, so it is safe to run at every start.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Seed.DatabaseSeeder.#ctor(SupplyChain.Infrastructure.Persistence.SupplyChainDbContext,Microsoft.AspNetCore.Identity.UserManager{SupplyChain.Infrastructure.Identity.ApplicationUser},Microsoft.AspNetCore.Identity.RoleManager{SupplyChain.Infrastructure.Identity.ApplicationRole},Microsoft.Extensions.Logging.ILogger{SupplyChain.Infrastructure.Persistence.Seed.DatabaseSeeder})">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Seed.DatabaseSeeder.SeedAsync(System.String,System.Threading.CancellationToken)">
+            <summary>Applies migrations, then seeds roles, a company and an administrator.</summary>
+            <param name="adminPassword">
+            Initial administrator password, supplied from configuration. Never hard-coded — the legacy
+            source carried live SQL Server credentials in <c>modMain.bas</c> in plain text.
+            </param>
+            <param name="cancellationToken">A cancellation token.</param>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Seed.DatabaseSeeder.SeedMasterDataAsync(System.Threading.CancellationToken)">
+            <summary>
+            Seeds a small amount of master data so the application is demonstrable without a
+            production database.
+            </summary>
+            <remarks>
+            Illustrative only. The real load comes from the extract-transform-load across the eighteen
+            legacy databases described in <c>docs/03-Database-Migration-Plan.md</c> §4, which must also
+            reconcile the master-data drift between them.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Seed.DatabaseSeeder.SeedStatementsAsync(SupplyChain.Domain.Entities.Company,System.Threading.CancellationToken)">
+            <summary>
+            Seeds a small run of statement lines so the Wave 3 reports have something to show.
+            </summary>
+            <remarks>
+            Illustrative only. Real rows arrive from the legacy system through the
+            extract-transform-load, while the VB6 application remains authoritative for writes during
+            the parallel run.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Seed.DatabaseSeeder.SeedPurchaseOrdersAsync(SupplyChain.Domain.Entities.Company,System.Threading.CancellationToken)">
+            <summary>Seeds a couple of purchase orders so the module is demonstrable.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Seed.DatabaseSeeder.SeedGoodsReceiptsAsync(SupplyChain.Domain.Entities.Company,System.Threading.CancellationToken)">
+            <summary>Seeds a goods receipt so the balance report has something to reconcile.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.Seed.DatabaseSeeder.SeedAccountsAsync(SupplyChain.Domain.Entities.Company,System.Threading.CancellationToken)">
+            <summary>Seeds a bill and a cheque book so the accounts screens are demonstrable.</summary>
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Persistence.SupplyChainDbContext">
+            <summary>
+            The application's EF Core context, combining domain data and ASP.NET Core Identity.
+            </summary>
+            <remarks>
+            <para>
+            This single context replaces <strong>eighteen separate SQL Server databases</strong>
+            (<c>InventoryPJL</c>, <c>InventoryUJL</c>, <c>InventoryPAL</c> and fifteen more), each holding
+            an identical schema for one company. Tenancy is now a column, enforced by the global query
+            filters configured below.
+            </para>
+            <para>
+            It also replaces the legacy global <c>ADODB.Connection</c>, which was opened once at
+            application start and shared by every form for the lifetime of the process. Here the context
+            is scoped to a request.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.SupplyChainDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{SupplyChain.Infrastructure.Persistence.SupplyChainDbContext},SupplyChain.Application.Abstractions.ITenantContext)">
+            <summary>Initialises a new instance.</summary>
+            <param name="options">Context options supplied by dependency injection.</param>
+            <param name="tenant">The company scope applied to tenant-scoped entities.</param>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.SupplyChainDbContext.Companies">
+            <summary>Companies (tenants). Not itself tenant-scoped.</summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.SupplyChainDbContext.DocumentSequences">
+            <summary>Per-company, per-year document number counters.</summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.SupplyChainDbContext.UserCompanyAccess">
+            <summary>Grants of company access to users.</summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.SupplyChainDbContext.Countries">
+            <summary>Countries. Legacy table: <c>new_Country</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.SupplyChainDbContext.PfNumbers">
+            <summary>File numbers. Legacy table: <c>new_PF_No</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.SupplyChainDbContext.Parties">
+            <summary>Bill parties. Legacy table: <c>Party</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.SupplyChainDbContext.AccountsHeads">
+            <summary>Accounts heads. Legacy table: <c>AccountsHead</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.SupplyChainDbContext.ItemTypes">
+            <summary>Item types. Legacy table: <c>new_Item_Type</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.SupplyChainDbContext.Items">
+            <summary>Items. Legacy table: <c>new_Item_Name</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.SupplyChainDbContext.Suppliers">
+            <summary>Suppliers. Legacy table: <c>new_Supplier</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.SupplyChainDbContext.CashCreditStatements">
+            <summary>
+            Cash-and-credit statement lines. Legacy table: <c>Statement_of_Cash_and_Credit</c>.
+            </summary>
+            <remarks>
+            The first company-scoped entity, and therefore the first to be filtered by tenant. Wave 3
+            reads it; the write path arrives with the accounts module in Wave 7.
+            </remarks>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.SupplyChainDbContext.PurchaseOrders">
+            <summary>
+            Purchase orders. Legacy tables: <c>Pro_Inv_Main</c> and <c>Pro_Inv_MainOC</c>, merged.
+            </summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.SupplyChainDbContext.PurchaseOrderLines">
+            <summary>Purchase order lines. Legacy tables: <c>Pro_Inv_Sub</c> and <c>Pro_Inv_SubOC</c>, merged.</summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.SupplyChainDbContext.Mrrs">
+            <summary>
+            Goods receipts. Legacy tables: <c>Mrr_Challan_Main</c> and <c>Mrr_Challan_MainOC</c>, merged.
+            </summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.SupplyChainDbContext.MrrLines">
+            <summary>Goods receipt lines. Legacy tables: <c>MRR_Challan_Sub</c> and <c>MRR_Challan_SubOC</c>, merged.</summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.SupplyChainDbContext.MrrApprovals">
+            <summary>Goods receipt approvals. Legacy table: <c>Signature</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.SupplyChainDbContext.Banks">
+            <summary>Banks. Legacy table: <c>New_Bank</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.SupplyChainDbContext.Bills">
+            <summary>Bills. Legacy table: <c>BillMain</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.SupplyChainDbContext.BillLines">
+            <summary>Bill lines. Legacy table: <c>BillDetails</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.SupplyChainDbContext.ChequeBooks">
+            <summary>Cheque books. Legacy table: <c>Cheque_Master_Table</c>.</summary>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.SupplyChainDbContext.Cheques">
+            <summary>Cheques. Legacy table: <c>Cheque_Child_Table</c>.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.SupplyChainDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.SupplyChainDbContext.ApplyGlobalFilters(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <summary>
+            Applies tenant and soft-delete filters to every entity that opts into them.
+            </summary>
+            <remarks>
+            <para>
+            Applied by convention rather than entity by entity, so a new tenant-scoped entity is
+            isolated the moment it implements <see cref="T:SupplyChain.Domain.Common.ICompanyScoped"/> — there is no filter to
+            remember to add.
+            </para>
+            <para>
+            This is the structural answer to the legacy application's reliance on hiding menu items:
+            isolation now lives in the data layer, where a forgotten WHERE clause cannot defeat it.
+            </para>
+            </remarks>
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Persistence.SupplyChainDbContext.CurrentCompanyId">
+            <summary>
+            The company scope applied by the global query filters.
+            </summary>
+            <remarks>
+            Read through a property rather than captured as a constant so the filter reflects the
+            tenant of the current request. When the caller is permitted to read across all companies,
+            this returns <c>null</c> and the equality comparison yields no rows — such queries must
+            call <c>IgnoreQueryFilters()</c> explicitly, which keeps cross-company access deliberate
+            and greppable.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Persistence.SupplyChainDbContext.SupplyChain#Domain#Interfaces#IUnitOfWork#BeginTransactionAsync(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Reporting.AuditQueryService">
+            <summary>
+            The audit report: who created, changed or deleted a document, and when.
+            </summary>
+            <remarks>
+            <para>
+            Replaces <c>rptMrrEditDeleteInfo</c>, <c>rptChallanEditDeleteInfo</c>,
+            <c>rptPOEditDeleteInfo</c> and <c>rptALLPOInfo</c>, driven by three separate forms. All reported
+            the same facts about different tables.
+            </para>
+            <para>
+            The legacy reports could say a row had been deleted, because <c>DeleteRow</c> was set, but not
+            who deleted it — the schema recorded the flag and nothing else. The audit interceptor stamps
+            deletions the same way it stamps creations and edits, so the report can now answer the question
+            its title always implied.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Reporting.AuditQueryService.#ctor(SupplyChain.Infrastructure.Persistence.SupplyChainDbContext,SupplyChain.Infrastructure.Reporting.ReportContext)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Reporting.AuditQueryService.ExecuteAsync(SupplyChain.Application.Reports.Registers.AuditParams,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Reporting.PurchaseOrderRegisterQueryService">
+            <summary>
+            The purchase order register.
+            </summary>
+            <remarks>
+            Replaces thirteen Crystal files. <c>frmRptProInvoice.frm</c> chose between them by testing
+            which of its combo boxes had been filled, then again on a currency checkbox and a "pad"
+            checkbox. The currency dimension disappeared when the two order tables were merged in Wave 5.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Reporting.PurchaseOrderRegisterQueryService.#ctor(SupplyChain.Infrastructure.Persistence.SupplyChainDbContext,SupplyChain.Infrastructure.Reporting.ReportContext)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Reporting.PurchaseOrderRegisterQueryService.ExecuteAsync(SupplyChain.Application.Reports.Registers.PurchaseOrderRegisterParams,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Reporting.MrrRegisterQueryService">
+            <summary>
+            The goods receipt register.
+            </summary>
+            <remarks>
+            Replaces twelve Crystal files: six filter modes times two currencies, driven by option buttons
+            on <c>frmrptMrrChallan.frm</c>.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Reporting.MrrRegisterQueryService.#ctor(SupplyChain.Infrastructure.Persistence.SupplyChainDbContext,SupplyChain.Infrastructure.Reporting.ReportContext)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Reporting.MrrRegisterQueryService.ExecuteAsync(SupplyChain.Application.Reports.Registers.MrrRegisterParams,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Reporting.ItemMovementQueryService">
+            <summary>
+            Item movement: what was ordered against what was received.
+            </summary>
+            <remarks>
+            <para>
+            Replaces five Crystal files from <c>FrmItemName.frm</c>: <c>rptitemname</c>,
+            <c>rptitemnameMRR</c>, their <c>_Allcompany</c> variants, and
+            <c>rpt_PO_MRR_ItemStatement</c>. The subject and the scope are parameters.
+            </para>
+            <para>
+            This is the second report in the system that can cross companies. Like the statement reports,
+            it steps outside the tenant filter only when the caller holds
+            <c>reports.allcompanies</c> — which the controller checks before the parameter reaches here.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Reporting.ItemMovementQueryService.#ctor(SupplyChain.Infrastructure.Persistence.SupplyChainDbContext,SupplyChain.Application.Abstractions.ITenantContext,SupplyChain.Application.Abstractions.ICurrentUser,SupplyChain.Application.Abstractions.IDateTimeProvider)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Reporting.ItemMovementQueryService.ExecuteAsync(SupplyChain.Application.Reports.Registers.ItemMovementParams,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Reporting.ItemMovementQueryService.Aggregate(System.Collections.Generic.IEnumerable{System.ValueTuple{System.Int32,System.Int32,System.Decimal,System.Decimal}})">
+            <summary>
+            Sums in memory, for the reason recorded since Wave 4: EF Core's SQLite provider stores
+            decimal as TEXT and cannot SUM it, and summing money as double would trade precision for
+            convenience. The set is bounded by the report's own filters.
+            </summary>
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Reporting.MonthlyStatementQueryService">
+            <summary>
+            The monthly statement.
+            </summary>
+            <remarks>
+            <para>
+            Replaces <c>frmrptMonthlyStatement.frm</c> and <c>rptMonthlyStatement.rpt</c>.
+            </para>
+            <para>
+            <strong>The aggregation is inferred.</strong> The legacy form read a view called
+            <c>viewMonthlyStatement</c> and only ever issued <c>SELECT * FROM viewMonthlyStatement
+            WHERE CompanyID = …</c> or <c>… WHERE Tran_Type = '…'</c>. The view's definition is not in the
+            source tree and no production schema was available, so the grouping below — year, month and
+            transaction type over the cash-and-credit statement — is derived from the form's filters and
+            the report's name.
+            </para>
+            <para>
+            This must be reconciled against live output before cutover. It is recorded as an open item in
+            the wave notes rather than presented as settled.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Reporting.MonthlyStatementQueryService.#ctor(SupplyChain.Infrastructure.Persistence.SupplyChainDbContext,SupplyChain.Application.Abstractions.ITenantContext,SupplyChain.Application.Abstractions.ICurrentUser,SupplyChain.Application.Abstractions.IDateTimeProvider)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Reporting.MonthlyStatementQueryService.ExecuteAsync(SupplyChain.Application.Reports.MonthlyStatement.MonthlyStatementParams,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Reporting.PartyStatementQueryService">
+            <summary>
+            The party statement, in detail and summarised.
+            </summary>
+            <remarks>
+            <para>
+            Replaces <c>frmrptPartyStatement.frm</c> and three Crystal files —
+            <c>rptPartyStatement.rpt</c>, <c>rptPartyStatementSummary.rpt</c> and
+            <c>rptPartyStatement_AllComp.rpt</c>.
+            </para>
+            <para>
+            It also removes <c>Temp_Statement_of_Cash_and_Credit</c>. That table was not a cache: it was
+            how the legacy application unioned across eighteen databases. Each run emptied it, filled it
+            with one INSERT ... SELECT per company, and read it back — so two users running a party
+            statement at the same time destroyed each other's results. With one database it is a predicate.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Reporting.PartyStatementQueryService.#ctor(SupplyChain.Infrastructure.Persistence.SupplyChainDbContext,SupplyChain.Application.Abstractions.ITenantContext,SupplyChain.Application.Abstractions.ICurrentUser,SupplyChain.Application.Abstractions.IDateTimeProvider)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Reporting.PartyStatementQueryService.ExecuteAsync(SupplyChain.Application.Reports.PartyStatement.PartyStatementParams,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Reporting.PartyStatementQueryService.SupplyChain#Application#Reports#IReportQueryService{SupplyChain#Application#Reports#PartyStatement#PartyStatementParams,SupplyChain#Application#Reports#PartyStatement#PartyStatementSummaryRow}#ExecuteAsync(SupplyChain.Application.Reports.PartyStatement.PartyStatementParams,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Reporting.QuestPdfRenderer">
+            <summary>
+            Renders reports to PDF with QuestPDF.
+            </summary>
+            <remarks>
+            <para>
+            The single implementation of <see cref="T:SupplyChain.Application.Reports.IPdfRenderer"/>, chosen over rendering HTML through a
+            headless browser because its pagination is deterministic and it needs no native binary. The
+            evaluation is in <c>docs/05-Reporting-Strategy.md</c>.
+            </para>
+            <para>
+            One layout serves every report, driven by the column descriptors the caller supplies. The
+            legacy application had a hand-built <c>.rpt</c> file per report — fifty-six of them — which is
+            why they share no visual identity.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Reporting.QuestPdfRenderer.Render``1(SupplyChain.Application.Reports.ReportResult{``0},System.Collections.Generic.IReadOnlyList{SupplyChain.Application.Reports.ReportColumn{``0}})">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Reporting.QuestPdfRenderer.AppendTotals``1(QuestPDF.Fluent.TableDescriptor,SupplyChain.Application.Reports.ReportResult{``0},System.Collections.Generic.IReadOnlyList{SupplyChain.Application.Reports.ReportColumn{``0}})">
+            <summary>
+            Adds a totals row for every numeric column that declares one.
+            </summary>
+            <remarks>
+            Totals are what the parallel run reconciles against the legacy output, so they are computed
+            from the same rows the table prints rather than by a second query.
+            </remarks>
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Reporting.BillRegisterQueryService">
+            <summary>
+            The bill register.
+            </summary>
+            <remarks>
+            <para>
+            Replaces sixteen Crystal files — eight filter modes, in a cash set and a credit set — driven by
+            <c>rptBillDetailsCash.frm</c> and <c>rptBillDetailsCredit.frm</c>. All ran
+            <c>SELECT * FROM vieBillDetails</c> with a different column in the WHERE clause and a different
+            <c>Status</c> literal. Here the mode and the kind are parameters.
+            </para>
+            <para>
+            The query is issued in two steps rather than one join. The document number is a shadow property
+            on <c>Bill</c>, and EF Core can translate <c>EF.Property</c> against a query root but not
+            through a join projection — an earlier single-query version failed with "could not be
+            translated". Selecting the bills, then their lines, keeps both halves translatable and the
+            intent legible.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Reporting.BillRegisterQueryService.#ctor(SupplyChain.Infrastructure.Persistence.SupplyChainDbContext,SupplyChain.Infrastructure.Reporting.ReportContext)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Reporting.BillRegisterQueryService.ExecuteAsync(SupplyChain.Application.Reports.Registers.BillRegisterParams,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Reporting.ChequeRegisterQueryService">
+            <summary>
+            The cheque register.
+            </summary>
+            <remarks>
+            Replaces <c>rptChequeInfo</c>, <c>rptChequeInfoDate</c> and
+            <c>rptChequeInfoTransactionWise</c>. Composed the same way as the bill register, and for the
+            same reason.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Reporting.ChequeRegisterQueryService.#ctor(SupplyChain.Infrastructure.Persistence.SupplyChainDbContext,SupplyChain.Infrastructure.Reporting.ReportContext)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Reporting.ChequeRegisterQueryService.ExecuteAsync(SupplyChain.Application.Reports.Registers.ChequeRegisterParams,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Reporting.ReportContext">
+            <summary>
+            Builds the heading every report carries: the company, who ran it, and when.
+            </summary>
+            <remarks>
+            Waves 3 and 4 each repeated this composition inside their query services. By Wave 8 there were
+            five report families doing the same three lookups, so it is factored out here rather than
+            copied a sixth time.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Reporting.ReportContext.#ctor(SupplyChain.Infrastructure.Persistence.SupplyChainDbContext,SupplyChain.Application.Abstractions.ITenantContext,SupplyChain.Application.Abstractions.ICurrentUser,SupplyChain.Application.Abstractions.IDateTimeProvider)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Reporting.ReportContext.ComposeAsync``1(System.String,System.Collections.Generic.IReadOnlyList{SupplyChain.Application.Reports.ReportCriterion},System.Collections.Generic.IReadOnlyList{``0},System.Threading.CancellationToken)">
+            <summary>Wraps rows in a report result headed by the active company.</summary>
+            <typeparam name="TRow">One row of output.</typeparam>
+            <param name="title">The report title.</param>
+            <param name="criteria">The parameters in force.</param>
+            <param name="rows">The rows.</param>
+            <param name="cancellationToken">A cancellation token.</param>
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Reporting.StatementQueryFilters">
+            <summary>
+            Filters shared by the statement reports.
+            </summary>
+            <remarks>
+            <para>
+            <c>frmrptPartyStatement.frm</c> contained a hundred SQL statements in 752 lines — the densest
+            query logic in the legacy application. Almost all of that volume came from writing out every
+            combination of party, date basis, transaction type and company scope as its own literal
+            string, then repeating the set once per company database.
+            </para>
+            <para>
+            Composing predicates instead means each filter is written once, and adding one does not
+            multiply the others.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Reporting.StatementQueryFilters.ApplyScope(System.Linq.IQueryable{SupplyChain.Domain.Entities.Statements.CashCreditStatement},System.Boolean)">
+            <summary>
+            Applies the tenant scope.
+            </summary>
+            <remarks>
+            <strong>Call this before any join.</strong> <c>IgnoreQueryFilters</c> applies to the whole
+            query rather than the operand it is called on, so calling it later — or on a joined set
+            that needs no filtering — silently disables tenant isolation for everything. That happened
+            in Wave 3 and one company's rows appeared in another's report.
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Reporting.StatementQueryFilters.ApplyFilters(System.Linq.IQueryable{SupplyChain.Domain.Entities.Statements.CashCreditStatement},SupplyChain.Application.Reports.PartyStatement.PartyStatementParams)">
+            <summary>Applies the party, date, and type filters, each only when supplied.</summary>
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Reporting.TransactionStatementQueryService">
+            <summary>
+            The transaction statement report.
+            </summary>
+            <remarks>
+            <para>
+            Replaces four VB6 forms and four Crystal report files. All four ran the same query against
+            <c>viewStatement_Cash_Credit</c> and differed only in which column the WHERE clause filtered
+            on; <c>frmrptTransactionWiseReport</c> alone contained an eight-branch nested <c>If</c>
+            building one of eight nearly identical SQL strings.
+            </para>
+            <para>
+            Here the filters compose. Each is applied only when supplied, so the eight branches collapse
+            into a query built once.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Reporting.TransactionStatementQueryService.#ctor(SupplyChain.Infrastructure.Persistence.SupplyChainDbContext,SupplyChain.Application.Abstractions.ITenantContext,SupplyChain.Application.Abstractions.ICurrentUser,SupplyChain.Application.Abstractions.IDateTimeProvider)">
+            <summary>Initialises a new instance.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Reporting.TransactionStatementQueryService.ExecuteAsync(SupplyChain.Application.Reports.TransactionStatement.TransactionStatementParams,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Reporting.TransactionStatementQueryService.TitleFor(SupplyChain.Application.Reports.TransactionStatement.StatementFilterMode)">
+            <summary>The report title, matching the legacy menu wording.</summary>
+        </member>
+        <member name="M:SupplyChain.Infrastructure.Reporting.TransactionStatementQueryService.DescribeCriteria(SupplyChain.Application.Reports.TransactionStatement.TransactionStatementParams)">
+            <summary>
+            Describes the filters in force, so a printed copy says what it covers.
+            </summary>
+            <remarks>
+            The legacy reports passed a couple of these through Crystal <c>FormulaFields</c> — the
+            "All Company" label was one — but most filter values never appeared on the printed page.
+            </remarks>
+        </member>
+        <member name="T:SupplyChain.Infrastructure.Services.DateTimeProvider">
+            <inheritdoc cref="T:SupplyChain.Application.Abstractions.IDateTimeProvider" />
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Services.DateTimeProvider.UtcNow">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Services.DateTimeProvider.Now">
+            <inheritdoc />
+        </member>
+        <member name="P:SupplyChain.Infrastructure.Services.DateTimeProvider.Today">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

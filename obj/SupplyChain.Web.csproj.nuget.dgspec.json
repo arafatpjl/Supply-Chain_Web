@@ -1,0 +1,342 @@
+{
+  "format": 1,
+  "restore": {
+    "/Volumes/D/All Software/SupplyChain.Modern/src/SupplyChain.Web/SupplyChain.Web.csproj": {}
+  },
+  "projects": {
+    "/Volumes/D/All Software/SupplyChain.Modern/src/SupplyChain.Application/SupplyChain.Application.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Volumes/D/All Software/SupplyChain.Modern/src/SupplyChain.Application/SupplyChain.Application.csproj",
+        "projectName": "SupplyChain.Application",
+        "projectPath": "/Volumes/D/All Software/SupplyChain.Modern/src/SupplyChain.Application/SupplyChain.Application.csproj",
+        "packagesPath": "/Users/arafathossan/.nuget/packages/",
+        "outputPath": "/Volumes/D/All Software/SupplyChain.Modern/src/SupplyChain.Application/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/arafathossan/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/Volumes/D/All Software/SupplyChain.Modern/src/SupplyChain.Domain/SupplyChain.Domain.csproj": {
+                "projectPath": "/Volumes/D/All Software/SupplyChain.Modern/src/SupplyChain.Domain/SupplyChain.Domain.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "FluentValidation": {
+              "target": "Package",
+              "version": "[11.11.0, )"
+            },
+            "FluentValidation.DependencyInjectionExtensions": {
+              "target": "Package",
+              "version": "[11.11.0, )"
+            },
+            "Microsoft.Extensions.DependencyInjection.Abstractions": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/Users/arafathossan/.dotnet/sdk/8.0.424/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/Volumes/D/All Software/SupplyChain.Modern/src/SupplyChain.Domain/SupplyChain.Domain.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Volumes/D/All Software/SupplyChain.Modern/src/SupplyChain.Domain/SupplyChain.Domain.csproj",
+        "projectName": "SupplyChain.Domain",
+        "projectPath": "/Volumes/D/All Software/SupplyChain.Modern/src/SupplyChain.Domain/SupplyChain.Domain.csproj",
+        "packagesPath": "/Users/arafathossan/.nuget/packages/",
+        "outputPath": "/Volumes/D/All Software/SupplyChain.Modern/src/SupplyChain.Domain/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/arafathossan/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/Users/arafathossan/.dotnet/sdk/8.0.424/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/Volumes/D/All Software/SupplyChain.Modern/src/SupplyChain.Infrastructure/SupplyChain.Infrastructure.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Volumes/D/All Software/SupplyChain.Modern/src/SupplyChain.Infrastructure/SupplyChain.Infrastructure.csproj",
+        "projectName": "SupplyChain.Infrastructure",
+        "projectPath": "/Volumes/D/All Software/SupplyChain.Modern/src/SupplyChain.Infrastructure/SupplyChain.Infrastructure.csproj",
+        "packagesPath": "/Users/arafathossan/.nuget/packages/",
+        "outputPath": "/Volumes/D/All Software/SupplyChain.Modern/src/SupplyChain.Infrastructure/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/arafathossan/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/Volumes/D/All Software/SupplyChain.Modern/src/SupplyChain.Application/SupplyChain.Application.csproj": {
+                "projectPath": "/Volumes/D/All Software/SupplyChain.Modern/src/SupplyChain.Application/SupplyChain.Application.csproj"
+              },
+              "/Volumes/D/All Software/SupplyChain.Modern/src/SupplyChain.Domain/SupplyChain.Domain.csproj": {
+                "projectPath": "/Volumes/D/All Software/SupplyChain.Modern/src/SupplyChain.Domain/SupplyChain.Domain.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "Microsoft.AspNetCore.Identity.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[8.0.11, )"
+            },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[8.0.11, )"
+            },
+            "Microsoft.EntityFrameworkCore.SqlServer": {
+              "target": "Package",
+              "version": "[8.0.11, )"
+            },
+            "Microsoft.Extensions.Configuration.Abstractions": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
+            "Microsoft.Extensions.Logging.Abstractions": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "QuestPDF": {
+              "target": "Package",
+              "version": "[2026.8.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/Users/arafathossan/.dotnet/sdk/8.0.424/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/Volumes/D/All Software/SupplyChain.Modern/src/SupplyChain.Web/SupplyChain.Web.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Volumes/D/All Software/SupplyChain.Modern/src/SupplyChain.Web/SupplyChain.Web.csproj",
+        "projectName": "SupplyChain.Web",
+        "projectPath": "/Volumes/D/All Software/SupplyChain.Modern/src/SupplyChain.Web/SupplyChain.Web.csproj",
+        "packagesPath": "/Users/arafathossan/.nuget/packages/",
+        "outputPath": "/Volumes/D/All Software/SupplyChain.Modern/src/SupplyChain.Web/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/arafathossan/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/Volumes/D/All Software/SupplyChain.Modern/src/SupplyChain.Application/SupplyChain.Application.csproj": {
+                "projectPath": "/Volumes/D/All Software/SupplyChain.Modern/src/SupplyChain.Application/SupplyChain.Application.csproj"
+              },
+              "/Volumes/D/All Software/SupplyChain.Modern/src/SupplyChain.Infrastructure/SupplyChain.Infrastructure.csproj": {
+                "projectPath": "/Volumes/D/All Software/SupplyChain.Modern/src/SupplyChain.Infrastructure/SupplyChain.Infrastructure.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "FluentValidation.AspNetCore": {
+              "target": "Package",
+              "version": "[11.3.0, )"
+            },
+            "Microsoft.AspNetCore.Diagnostics.HealthChecks": {
+              "target": "Package",
+              "version": "[2.2.0, )"
+            },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[8.0.11, )"
+            },
+            "Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[8.0.11, )"
+            },
+            "QuestPDF": {
+              "target": "Package",
+              "version": "[2026.8.0, )"
+            },
+            "Serilog.AspNetCore": {
+              "target": "Package",
+              "version": "[8.0.3, )"
+            },
+            "Serilog.Sinks.Console": {
+              "target": "Package",
+              "version": "[6.0.0, )"
+            },
+            "Serilog.Sinks.File": {
+              "target": "Package",
+              "version": "[6.0.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/Users/arafathossan/.dotnet/sdk/8.0.424/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

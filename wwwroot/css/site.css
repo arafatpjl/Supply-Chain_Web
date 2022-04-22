@@ -1,0 +1,47 @@
+/*
+    Application styling.
+
+    Kept deliberately small: Bootstrap 5 supplies the design system, and this file holds only
+    what is specific to this application. The legacy forms hard-coded colours, fonts and control
+    positions per form in the .frm files, which is why no two screens quite matched.
+*/
+
+:root {
+    --sc-header-height: 3.5rem;
+}
+
+body {
+    font-size: 0.95rem;
+}
+
+/* Hide an empty validation summary rather than leaving an empty red box on the page. */
+.d-none-if-empty:empty {
+    display: none !important;
+}
+
+/* Data grids — the successor to MSFlexGrid. Headers stay visible while the body scrolls,
+   which the ActiveX control could not do. */
+.sc-grid-wrapper {
+    max-height: 60vh;
+    overflow: auto;
+}
+
+.sc-grid-wrapper thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: var(--bs-body-bg);
+    box-shadow: inset 0 -1px 0 var(--bs-border-color);
+}
+
+/* Numeric columns right-align, as they did in the legacy grids and as accounting convention
+   expects. */
+.sc-numeric {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.navbar-brand {
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}

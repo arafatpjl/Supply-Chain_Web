@@ -1,0 +1,68 @@
+@{
+    ViewData["Title"] = "Dashboard";
+}
+@*
+    Wave 0 landing page. It deliberately reports migration progress rather than showing
+    placeholder widgets: the point of this wave is that the architecture runs end to end.
+*@
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h4 mb-0">Dashboard</h1>
+    <span class="badge text-bg-secondary">Wave 0 &mdash; Foundation</span>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-6 col-xl-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h2 class="h6 text-body-secondary">Legacy source</h2>
+                <p class="display-6 mb-0">49</p>
+                <small class="text-body-secondary">VB6 forms, ~52,000 lines</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h2 class="h6 text-body-secondary">Crystal reports</h2>
+                <p class="display-6 mb-0">56</p>
+                <small class="text-body-secondary">to be replaced by ~19 parameterised reports</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h2 class="h6 text-body-secondary">Databases consolidated</h2>
+                <p class="display-6 mb-0">18 -&gt; 1</p>
+                <small class="text-body-secondary">tenancy is now a column, not a database</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h2 class="h6 text-body-secondary">Current wave</h2>
+                <p class="display-6 mb-0">0 / 8</p>
+                <small class="text-body-secondary">foundation complete</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-body">
+        <h2 class="h6">What Wave 0 delivers</h2>
+        <p class="text-body-secondary small mb-2">
+            No business screens yet &mdash; by design. This wave proves the architecture end to end
+            so that every later wave copies a pattern that already works.
+        </p>
+        <ul class="small mb-0">
+            <li>Four-layer solution with dependency rules enforced by an architecture test</li>
+            <li>EF Core against a single consolidated database, with tenant isolation applied by global query filter</li>
+            <li>ASP.NET Core Identity, with authorisation enforced at the controller rather than by hiding menu items</li>
+            <li>Serilog structured logging, health checks, and global error handling</li>
+            <li>Audit columns written by a save interceptor instead of by hand in every INSERT</li>
+        </ul>
+    </div>
+</div>
