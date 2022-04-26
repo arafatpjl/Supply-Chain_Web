@@ -1,0 +1,108 @@
+@model BillIndexViewModel
+@{ ViewData["Title"] = "Bills"; }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h4 mb-0">Bills</h1>
+        <small class="text-body-secondary">
+            Replaces <code>frmBillNO.frm</code> and <code>frmBillNOCash.frm</code>
+        </small>
+    </div>
+    <a class="btn btn-primary" asp-action="Create">New Bill</a>
+</div>
+
+<div class="alert alert-light border small d-flex align-items-start gap-2">
+    <span>ℹ️</span>
+    <div>
+        Two 1,500-line VB6 forms existed to write one character: <code>Status = 'C'</code> for
+        credit, <code>'A'</code> for cash. Everything else about them was the same. It is a field
+        on this form now.
+    </div>
+</div>
+
+<form method="get" asp-action="Index" class="mb-3">
+    <div class="row g-2 align-items-center">
+        <div class="col-auto">
+            <input type="search" name="search" value="@Model.SearchTerm" class="form-control"
+                   placeholder="ID no, invoice no or MRR no" aria-label="Search" />
+        </div>
+        <div class="col-auto">
+            <select name="partyId" class="form-select" aria-label="Filter by party">
+                <option value="">All parties</option>
+                @foreach (var party in Model.Parties)
+                {
+                    <option value="@party.Id" selected="@(party.Id == Model.PartyId)">@party.Name</option>
+                }
+            </select>
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-outline-secondary">Search</button>
+            @if (!string.IsNullOrEmpty(Model.SearchTerm) || Model.PartyId.HasValue)
+            {
+                <a class="btn btn-outline-secondary" asp-action="Index">Clear</a>
+            }
+        </div>
+    </div>
+</form>
+
+<div class="card">
+    <div class="sc-grid-wrapper">
+        <table class="table table-sm table-hover mb-0 align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">ID No</th>
+                    <th scope="col">ID Date</th>
+                    <th scope="col">Type</th>
+                    <th scope="col" class="sc-numeric">Invoices</th>
+                    <th scope="col" class="sc-numeric">Total</th>
+                    <th scope="col" class="text-end" style="width: 14rem;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Results.Items.Count == 0)
+                {
+                    <tr><td colspan="6" class="text-center text-body-secondary py-4">No Data found !</td></tr>
+                }
+                else
+                {
+                    @foreach (var bill in Model.Results.Items)
+                    {
+                        <tr>
+                            <td><code>@bill.Number</code></td>
+                            <td>@bill.IdentificationDate.ToString("dd-MMM-yyyy")</td>
+                            <td>
+                                <span class="badge @(bill.Kind == SupplyChain.Domain.Enums.BillKind.Cash ? "text-bg-info" : "text-bg-secondary")">
+                                    @bill.Kind
+                                </span>
+                            </td>
+                            <td class="sc-numeric">@bill.LineCount</td>
+                            <td class="sc-numeric">@bill.Total.ToString("N2") @bill.Currency</td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-outline-secondary" asp-action="Details" asp-route-id="@bill.Id">View</a>
+                                <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@bill.Id">Edit</a>
+                                <form method="post" class="d-inline" asp-action="Delete" asp-route-id="@bill.Id"
+                                      onsubmit="return confirm('Are you sure to Delete?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer">
+        <partial name="_Pager" model="@(new PagerViewModel
+                                        {
+                                            PageNumber = Model.Results.PageNumber,
+                                            TotalPages = Model.Results.TotalPages,
+                                            TotalCount = Model.Results.TotalCount,
+                                            BasePath = Url.Action("Index")!,
+                                            RouteValues = new Dictionary<string, string?>
+                                            {
+                                                ["search"] = Model.SearchTerm,
+                                                ["partyId"] = Model.PartyId?.ToString(),
+                                            },
+                                        })" />
+    </div>
+</div>

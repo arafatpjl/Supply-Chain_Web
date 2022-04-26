@@ -1,0 +1,53 @@
+@model SupplyChain.Application.Accounts.BillDto
+@{ ViewData["Title"] = $"Bill {Model.Number}"; }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h4 mb-0">Bill <code>@Model.Number</code></h1>
+        <small class="text-body-secondary">
+            @Model.Kind &middot; @Model.IdentificationDate.ToString("dd-MMM-yyyy")
+        </small>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary" asp-action="Edit" asp-route-id="@Model.Id">Edit</a>
+        <a class="btn btn-outline-secondary" asp-action="Index">Close</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="sc-grid-wrapper">
+        <table class="table table-sm mb-0 align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Party</th>
+                    <th scope="col">Head of Accounts</th>
+                    <th scope="col">Invoice No</th>
+                    <th scope="col">Invoice Date</th>
+                    <th scope="col">MRR No</th>
+                    <th scope="col">Remarks</th>
+                    <th scope="col" class="sc-numeric">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var line in Model.Lines)
+                {
+                    <tr>
+                        <td>@line.PartyName</td>
+                        <td class="text-body-secondary">@line.AccountsHeadName</td>
+                        <td>@line.BillNo</td>
+                        <td>@line.BillDate.ToString("dd-MMM-yyyy")</td>
+                        <td class="text-body-secondary">@(line.MrrNo ?? "—")</td>
+                        <td class="text-body-secondary">@line.Remarks</td>
+                        <td class="sc-numeric">@line.Amount.ToString("N2")</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr class="fw-semibold border-top">
+                    <td colspan="6" class="text-end">Total</td>
+                    <td class="sc-numeric">@Model.Total.ToString("N2") @Model.Currency</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>

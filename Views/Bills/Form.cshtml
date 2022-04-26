@@ -1,0 +1,140 @@
+@model BillFormViewModel
+@using SupplyChain.Domain.Enums
+@{ ViewData["Title"] = Model.IsEdit ? $"Edit Bill {Model.Number}" : "New Bill"; }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">@ViewData["Title"]</h1>
+    <a class="btn btn-outline-secondary" asp-action="Index">Close</a>
+</div>
+
+<form method="post" asp-action="@(Model.IsEdit ? "Edit" : "Create")" asp-route-id="@Model.Id">
+    <div asp-validation-summary="All" class="alert alert-danger d-none-if-empty"></div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label asp-for="IdentificationDate" class="form-label"></label>
+                    <input asp-for="IdentificationDate" type="date" class="form-control" />
+                    <span asp-validation-for="IdentificationDate" class="text-danger small"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="Kind" class="form-label"></label>
+                    <select asp-for="Kind" class="form-select">
+                        @foreach (var kind in Enum.GetValues<BillKind>())
+                        {
+                            <option value="@kind" selected="@(kind == Model.Kind)">@kind</option>
+                        }
+                    </select>
+                    <div class="form-text">Legacy <code>Status</code>: Cash = 'A', Credit = 'C'.</div>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="Currency" class="form-label"></label>
+                    <select asp-for="Currency" class="form-select">
+                        @foreach (var currency in Enum.GetValues<CurrencyCode>())
+                        {
+                            <option value="@currency" selected="@(currency == Model.Currency)">@currency</option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="fw-semibold">Invoices</span>
+            <button type="button" class="btn btn-sm btn-outline-primary" id="addLine">Add Invoice</button>
+        </div>
+
+        <div class="sc-grid-wrapper">
+            <table class="table table-sm mb-0 align-middle" id="lineTable">
+                <thead>
+                    <tr>
+                        <th scope="col" style="min-width: 11rem;">Party</th>
+                        <th scope="col" style="min-width: 11rem;">Head of Accounts</th>
+                        <th scope="col" style="min-width: 8rem;">Invoice No</th>
+                        <th scope="col" style="min-width: 9rem;">Invoice Date</th>
+                        <th scope="col" style="min-width: 8rem;">MRR No</th>
+                        <th scope="col" style="min-width: 9rem;">MRR Date</th>
+                        <th scope="col" style="min-width: 9rem;">Remarks</th>
+                        <th scope="col" style="min-width: 7rem;">Amount</th>
+                        <th scope="col" style="width: 3rem;"></th>
+                    </tr>
+                </thead>
+                <tbody id="lineBody">
+                    @for (var i = 0; i < Model.Lines.Count; i++)
+                    {
+                        <tr class="po-line">
+                            <td>
+                                <select name="Lines[@i].PartyId" class="form-select form-select-sm">
+                                    <option value="">— Select —</option>
+                                    @foreach (var party in Model.Parties)
+                                    {
+                                        <option value="@party.Id" selected="@(party.Id == Model.Lines[i].PartyId)">@party.Name</option>
+                                    }
+                                </select>
+                            </td>
+                            <td>
+                                <select name="Lines[@i].AccountsHeadId" class="form-select form-select-sm">
+                                    <option value="">— Select —</option>
+                                    @foreach (var head in Model.AccountsHeads)
+                                    {
+                                        <option value="@head.Id" selected="@(head.Id == Model.Lines[i].AccountsHeadId)">@head.Name</option>
+                                    }
+                                </select>
+                            </td>
+                            <td><input name="Lines[@i].BillNo" value="@Model.Lines[i].BillNo" class="form-control form-control-sm" /></td>
+                            <td><input name="Lines[@i].BillDate" value="@Model.Lines[i].BillDate.ToString("yyyy-MM-dd")" type="date" class="form-control form-control-sm" /></td>
+                            <td><input name="Lines[@i].MrrNo" value="@Model.Lines[i].MrrNo" class="form-control form-control-sm" /></td>
+                            <td><input name="Lines[@i].MrrDate" value="@(Model.Lines[i].MrrDate?.ToString("yyyy-MM-dd"))" type="date" class="form-control form-control-sm" /></td>
+                            <td><input name="Lines[@i].Remarks" value="@Model.Lines[i].Remarks" class="form-control form-control-sm" /></td>
+                            <td><input name="Lines[@i].Amount" value="@Model.Lines[i].Amount" type="number" step="0.01" class="form-control form-control-sm po-qty" /></td>
+                            <td><button type="button" class="btn btn-sm btn-outline-danger po-remove" aria-label="Remove invoice">&times;</button></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card-footer d-flex gap-2">
+            <button type="submit" class="btn btn-primary">@(Model.IsEdit ? "Update" : "Save")</button>
+            <a class="btn btn-outline-secondary" asp-action="Index">Close</a>
+        </div>
+    </div>
+</form>
+
+<template id="lineTemplate">
+    <tr class="po-line">
+        <td>
+            <select name="Lines[__i__].PartyId" class="form-select form-select-sm">
+                <option value="">— Select —</option>
+                @foreach (var party in Model.Parties)
+                {
+                    <option value="@party.Id">@party.Name</option>
+                }
+            </select>
+        </td>
+        <td>
+            <select name="Lines[__i__].AccountsHeadId" class="form-select form-select-sm">
+                <option value="">— Select —</option>
+                @foreach (var head in Model.AccountsHeads)
+                {
+                    <option value="@head.Id">@head.Name</option>
+                }
+            </select>
+        </td>
+        <td><input name="Lines[__i__].BillNo" class="form-control form-control-sm" /></td>
+        <td><input name="Lines[__i__].BillDate" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" type="date" class="form-control form-control-sm" /></td>
+        <td><input name="Lines[__i__].MrrNo" class="form-control form-control-sm" /></td>
+        <td><input name="Lines[__i__].MrrDate" type="date" class="form-control form-control-sm" /></td>
+        <td><input name="Lines[__i__].Remarks" class="form-control form-control-sm" /></td>
+        <td><input name="Lines[__i__].Amount" type="number" step="0.01" class="form-control form-control-sm po-qty" /></td>
+        <td><button type="button" class="btn btn-sm btn-outline-danger po-remove" aria-label="Remove invoice">&times;</button></td>
+    </tr>
+</template>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/line-editor.js" asp-append-version="true"></script>
+}
