@@ -1,0 +1,95 @@
+@model ChequeBookIndexViewModel
+@{ ViewData["Title"] = "Cheque Books"; }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h4 mb-0">Cheque Books</h1>
+        <small class="text-body-secondary">Replaces <code>frmChequeInfo.frm</code></small>
+    </div>
+    <a class="btn btn-primary" asp-action="Create">New Cheque Book</a>
+</div>
+
+<form method="get" asp-action="Index" class="mb-3">
+    <div class="row g-2 align-items-center">
+        <div class="col-auto">
+            <input type="search" name="search" value="@Model.SearchTerm" class="form-control"
+                   placeholder="Book no, cheque no or beneficiary" aria-label="Search" />
+        </div>
+        <div class="col-auto">
+            <select name="bankId" class="form-select" aria-label="Filter by bank">
+                <option value="">All banks</option>
+                @foreach (var bank in Model.Banks)
+                {
+                    <option value="@bank.Id" selected="@(bank.Id == Model.BankId)">@bank.Name</option>
+                }
+            </select>
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-outline-secondary">Search</button>
+            @if (!string.IsNullOrEmpty(Model.SearchTerm) || Model.BankId.HasValue)
+            {
+                <a class="btn btn-outline-secondary" asp-action="Index">Clear</a>
+            }
+        </div>
+    </div>
+</form>
+
+<div class="card">
+    <div class="sc-grid-wrapper">
+        <table class="table table-sm table-hover mb-0 align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Book No</th>
+                    <th scope="col">Bank</th>
+                    <th scope="col">Range</th>
+                    <th scope="col" class="sc-numeric">Used</th>
+                    <th scope="col" class="sc-numeric">Remaining</th>
+                    <th scope="col" class="sc-numeric">Value</th>
+                    <th scope="col" class="text-end" style="width: 14rem;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Results.Items.Count == 0)
+                {
+                    <tr><td colspan="7" class="text-center text-body-secondary py-4">No Data found !</td></tr>
+                }
+                else
+                {
+                    @foreach (var book in Model.Results.Items)
+                    {
+                        <tr>
+                            <td><code>@book.BookNo</code></td>
+                            <td>@book.BankName</td>
+                            <td class="text-body-secondary">@book.StartNo &ndash; @book.EndNo</td>
+                            <td class="sc-numeric">@book.UsedCount / @book.Capacity</td>
+                            <td class="sc-numeric">@book.RemainingCount</td>
+                            <td class="sc-numeric">@book.TotalValue.ToString("N2") @book.Currency</td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-outline-secondary" asp-action="Details" asp-route-id="@book.Id">View</a>
+                                <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@book.Id">Edit</a>
+                                <form method="post" class="d-inline" asp-action="Delete" asp-route-id="@book.Id"
+                                      onsubmit="return confirm('Are you sure to Delete?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer">
+        <partial name="_Pager" model="@(new PagerViewModel
+                                        {
+                                            PageNumber = Model.Results.PageNumber,
+                                            TotalPages = Model.Results.TotalPages,
+                                            TotalCount = Model.Results.TotalCount,
+                                            BasePath = Url.Action("Index")!,
+                                            RouteValues = new Dictionary<string, string?>
+                                            {
+                                                ["search"] = Model.SearchTerm,
+                                                ["bankId"] = Model.BankId?.ToString(),
+                                            },
+                                        })" />
+    </div>
+</div>

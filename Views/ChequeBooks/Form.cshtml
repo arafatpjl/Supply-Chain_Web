@@ -1,0 +1,119 @@
+@model ChequeBookFormViewModel
+@using SupplyChain.Domain.Enums
+@{ ViewData["Title"] = Model.IsEdit ? $"Edit Cheque Book {Model.BookNo}" : "New Cheque Book"; }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">@ViewData["Title"]</h1>
+    <a class="btn btn-outline-secondary" asp-action="Index">Close</a>
+</div>
+
+<form method="post" asp-action="@(Model.IsEdit ? "Edit" : "Create")" asp-route-id="@Model.Id">
+    <div asp-validation-summary="All" class="alert alert-danger d-none-if-empty"></div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label asp-for="BankId" class="form-label"></label>
+                    <select asp-for="BankId" class="form-select">
+                        <option value="">— Select —</option>
+                        @foreach (var bank in Model.Banks)
+                        {
+                            <option value="@bank.Id" selected="@(bank.Id == Model.BankId)">@bank.Name</option>
+                        }
+                    </select>
+                    <span asp-validation-for="BankId" class="text-danger small"></span>
+                </div>
+                <div class="col-md-2">
+                    <label asp-for="BookNo" class="form-label"></label>
+                    <input asp-for="BookNo" class="form-control" autocomplete="off" />
+                    <span asp-validation-for="BookNo" class="text-danger small"></span>
+                </div>
+                <div class="col-md-2">
+                    <label asp-for="StartNo" class="form-label"></label>
+                    <input asp-for="StartNo" type="number" class="form-control" />
+                </div>
+                <div class="col-md-2">
+                    <label asp-for="EndNo" class="form-label"></label>
+                    <input asp-for="EndNo" type="number" class="form-control" />
+                    <div class="form-text">Cheques outside this range are refused.</div>
+                </div>
+                <div class="col-md-1">
+                    <label asp-for="Prefix" class="form-label"></label>
+                    <input asp-for="Prefix" class="form-control" autocomplete="off" />
+                </div>
+                <div class="col-md-1">
+                    <label asp-for="Currency" class="form-label"></label>
+                    <select asp-for="Currency" class="form-select">
+                        @foreach (var currency in Enum.GetValues<CurrencyCode>())
+                        {
+                            <option value="@currency" selected="@(currency == Model.Currency)">@currency</option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="fw-semibold">Cheques</span>
+            <button type="button" class="btn btn-sm btn-outline-primary" id="addLine">Add Cheque</button>
+        </div>
+
+        <div class="sc-grid-wrapper">
+            <table class="table table-sm mb-0 align-middle" id="lineTable">
+                <thead>
+                    <tr>
+                        <th scope="col" style="min-width: 8rem;">Cheque No</th>
+                        <th scope="col" style="min-width: 9rem;">Issue Date</th>
+                        <th scope="col" style="min-width: 11rem;">Beneficiary</th>
+                        <th scope="col" style="min-width: 10rem;">Particulars</th>
+                        <th scope="col" style="min-width: 9rem;">Honour Date</th>
+                        <th scope="col" style="min-width: 9rem;">Remarks</th>
+                        <th scope="col" style="min-width: 7rem;">Value</th>
+                        <th scope="col" style="width: 3rem;"></th>
+                    </tr>
+                </thead>
+                <tbody id="lineBody">
+                    @for (var i = 0; i < Model.Cheques.Count; i++)
+                    {
+                        <tr class="po-line">
+                            <td><input name="Cheques[@i].ChequeNo" value="@Model.Cheques[i].ChequeNo" class="form-control form-control-sm" /></td>
+                            <td><input name="Cheques[@i].IssueDate" value="@Model.Cheques[i].IssueDate.ToString("yyyy-MM-dd")" type="date" class="form-control form-control-sm" /></td>
+                            <td><input name="Cheques[@i].Beneficiary" value="@Model.Cheques[i].Beneficiary" class="form-control form-control-sm" /></td>
+                            <td><input name="Cheques[@i].PaymentParticulars" value="@Model.Cheques[i].PaymentParticulars" class="form-control form-control-sm" /></td>
+                            <td><input name="Cheques[@i].EncashmentDate" value="@(Model.Cheques[i].EncashmentDate?.ToString("yyyy-MM-dd"))" type="date" class="form-control form-control-sm" /></td>
+                            <td><input name="Cheques[@i].Remarks" value="@Model.Cheques[i].Remarks" class="form-control form-control-sm" /></td>
+                            <td><input name="Cheques[@i].Value" value="@Model.Cheques[i].Value" type="number" step="0.01" class="form-control form-control-sm po-qty" /></td>
+                            <td><button type="button" class="btn btn-sm btn-outline-danger po-remove" aria-label="Remove cheque">&times;</button></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card-footer d-flex gap-2">
+            <button type="submit" class="btn btn-primary">@(Model.IsEdit ? "Update" : "Save")</button>
+            <a class="btn btn-outline-secondary" asp-action="Index">Close</a>
+        </div>
+    </div>
+</form>
+
+<template id="lineTemplate">
+    <tr class="po-line">
+        <td><input name="Cheques[__i__].ChequeNo" class="form-control form-control-sm" /></td>
+        <td><input name="Cheques[__i__].IssueDate" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" type="date" class="form-control form-control-sm" /></td>
+        <td><input name="Cheques[__i__].Beneficiary" class="form-control form-control-sm" /></td>
+        <td><input name="Cheques[__i__].PaymentParticulars" class="form-control form-control-sm" /></td>
+        <td><input name="Cheques[__i__].EncashmentDate" type="date" class="form-control form-control-sm" /></td>
+        <td><input name="Cheques[__i__].Remarks" class="form-control form-control-sm" /></td>
+        <td><input name="Cheques[__i__].Value" type="number" step="0.01" class="form-control form-control-sm po-qty" /></td>
+        <td><button type="button" class="btn btn-sm btn-outline-danger po-remove" aria-label="Remove cheque">&times;</button></td>
+    </tr>
+</template>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/line-editor.js" asp-append-version="true"></script>
+}

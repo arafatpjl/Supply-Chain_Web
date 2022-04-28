@@ -1,0 +1,72 @@
+@model SupplyChain.Application.Accounts.ChequeBookDto
+@{ ViewData["Title"] = $"Cheque Book {Model.BookNo}"; }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h4 mb-0">Cheque Book <code>@Model.BookNo</code></h1>
+        <small class="text-body-secondary">
+            @Model.BankName &middot; @Model.StartNo&ndash;@Model.EndNo
+        </small>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary" asp-action="Edit" asp-route-id="@Model.Id">Edit</a>
+        <a class="btn btn-outline-secondary" asp-action="Index">Close</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="sc-grid-wrapper">
+        <table class="table table-sm mb-0 align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Cheque No</th>
+                    <th scope="col">Issue Date</th>
+                    <th scope="col">Beneficiary</th>
+                    <th scope="col">Particulars</th>
+                    <th scope="col">Honour Date</th>
+                    <th scope="col">Status</th>
+                    <th scope="col" class="sc-numeric">Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Cheques.Count == 0)
+                {
+                    <tr><td colspan="7" class="text-center text-body-secondary py-4">No Data found !</td></tr>
+                }
+                else
+                {
+                    @foreach (var cheque in Model.Cheques)
+                    {
+                        <tr>
+                            <td><code>@cheque.ChequeNo</code></td>
+                            <td>@cheque.IssueDate.ToString("dd-MMM-yyyy")</td>
+                            <td>@cheque.Beneficiary</td>
+                            <td class="text-body-secondary">@cheque.PaymentParticulars</td>
+                            <td>@(cheque.EncashmentDate?.ToString("dd-MMM-yyyy") ?? "—")</td>
+                            <td>
+                                @if (cheque.IsEncashed)
+                                {
+                                    <span class="badge text-bg-success">Encashed</span>
+                                }
+                                else
+                                {
+                                    <span class="badge text-bg-secondary">Outstanding</span>
+                                }
+                            </td>
+                            <td class="sc-numeric">@cheque.Value.ToString("N2")</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+            @if (Model.Cheques.Count > 0)
+            {
+                <tfoot>
+                    <tr class="fw-semibold border-top">
+                        <td colspan="6" class="text-end">Total</td>
+                        <td class="sc-numeric">@Model.TotalValue.ToString("N2") @Model.Currency</td>
+                    </tr>
+                </tfoot>
+            }
+        </table>
+    </div>
+</div>
