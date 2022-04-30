@@ -1,0 +1,50 @@
+@model CompanySelectViewModel
+@{
+    ViewData["Title"] = "Select company";
+    Layout = (User.Identity?.IsAuthenticated ?? false) && Model.CurrentCompanyId is not null
+        ? "_Layout"
+        : "_LayoutAnonymous";
+}
+@*
+    Successor to the company picker on frmSplash.frm.
+
+    In the legacy system, choosing a company changed which of eighteen SQL Server databases the
+    global connection pointed at. Here it sets a claim that drives the EF Core tenant query
+    filters — the data is one database, scoped by CompanyId.
+*@
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <h1 class="h4 mb-3 mt-4">Select a company</h1>
+
+        @if (Model.Companies.Count == 0)
+        {
+            <div class="alert alert-warning">
+                Your account has not been granted access to any company.
+                Contact your system administrator.
+            </div>
+        }
+        else
+        {
+            <div class="list-group shadow-sm">
+                @foreach (var company in Model.Companies)
+                {
+                    <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center @(company.Id == Model.CurrentCompanyId ? "active" : "")"
+                       asp-action="Select"
+                       asp-route-id="@company.Id"
+                       asp-route-returnUrl="@Model.ReturnUrl">
+                        <span>
+                            <strong>@company.Name</strong>
+                            @if (!string.IsNullOrEmpty(company.Address))
+                            {
+                                <br />
+                                <small class="@(company.Id == Model.CurrentCompanyId ? "text-white-50" : "text-body-secondary")">@company.Address</small>
+                            }
+                        </span>
+                        <span class="badge text-bg-secondary">@company.ShortCode</span>
+                    </a>
+                }
+            </div>
+        }
+    </div>
+</div>
