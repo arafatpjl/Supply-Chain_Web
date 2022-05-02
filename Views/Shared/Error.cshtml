@@ -1,0 +1,22 @@
+@model ErrorViewModel
+@{
+    ViewData["Title"] = "Error";
+    Layout = "_LayoutAnonymous";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6 text-center py-5">
+        <h1 class="h3">Something went wrong</h1>
+        <p class="text-body-secondary">@Model.Message</p>
+
+        @if (Model.ShowRequestId)
+        {
+            @* Quoting this identifier lets an administrator find the exact Serilog entry. *@
+            <p class="small text-body-secondary">
+                Reference: <code>@Model.RequestId</code>
+            </p>
+        }
+
+        <a asp-controller="Home" asp-action="Index" class="btn btn-primary">Back to dashboard</a>
+    </div>
+</div>

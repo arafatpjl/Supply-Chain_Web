@@ -1,0 +1,54 @@
+@*
+    Application shell — the successor to frmMDIMain.frm.
+
+    The legacy MDI parent hosted child forms inside a fixed 1024x768 window with a menu bar
+    driven by modPermission.bas. Here the shell is a responsive Bootstrap 5 layout, and the
+    navigation is rendered by a view component that filters items by permission claim.
+*@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] &middot; Supply Chain Management</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="d-flex flex-column min-vh-100">
+    @if (User.Identity?.IsAuthenticated ?? false)
+    {
+        @await Component.InvokeAsync("Navigation")
+    }
+
+    <main class="container-fluid flex-grow-1 py-4">
+        @if (TempData["Success"] is string success)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @success
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        @if (TempData["Error"] is string error)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                @error
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        @RenderBody()
+    </main>
+
+    <footer class="border-top py-3 mt-auto bg-body-tertiary">
+        <div class="container-fluid d-flex justify-content-between small text-body-secondary">
+            <span>Supply Chain Management &mdash; migrated from VB6 to ASP.NET Core 8</span>
+            <span>&copy; @DateTime.Now.Year</span>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

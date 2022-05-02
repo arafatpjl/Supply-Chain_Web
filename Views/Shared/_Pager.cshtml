@@ -1,0 +1,33 @@
+@model SupplyChain.Web.ViewModels.PagerViewModel
+@*
+    Shared paging control. The legacy forms loaded entire tables into an MSFlexGrid with no
+    paging at all, which is why several of them take noticeable time to open.
+*@
+@if (Model.TotalPages > 1)
+{
+    <nav aria-label="Page navigation" class="d-flex justify-content-between align-items-center">
+        <small class="text-body-secondary">
+            Showing page @Model.PageNumber of @Model.TotalPages (@Model.TotalCount record@(Model.TotalCount == 1 ? "" : "s"))
+        </small>
+        <ul class="pagination pagination-sm mb-0">
+            <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                <a class="page-link" href="@Model.BuildUrl(Model.PageNumber - 1)">Previous</a>
+            </li>
+            @for (var p = Model.FirstShownPage; p <= Model.LastShownPage; p++)
+            {
+                <li class="page-item @(p == Model.PageNumber ? "active" : "")">
+                    <a class="page-link" href="@Model.BuildUrl(p)">@p</a>
+                </li>
+            }
+            <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                <a class="page-link" href="@Model.BuildUrl(Model.PageNumber + 1)">Next</a>
+            </li>
+        </ul>
+    </nav>
+}
+else
+{
+    <small class="text-body-secondary">
+        @Model.TotalCount record@(Model.TotalCount == 1 ? "" : "s")
+    </small>
+}

@@ -1,0 +1,43 @@
+@model NamedMasterDataFormViewModel
+@{
+    var d = Model.Descriptor;
+    ViewData["Title"] = Model.IsEdit ? $"Edit {d.SingularTitle}" : $"New {d.SingularTitle}";
+}
+@* One form view serving four master-data screens. *@
+
+<div class="row">
+    <div class="col-md-6 col-lg-5">
+        <h1 class="h4 mb-3">@ViewData["Title"]</h1>
+
+        <div class="card">
+            <div class="card-body">
+                <form method="post"
+                      asp-controller="@d.Controller"
+                      asp-action="@(Model.IsEdit ? "Edit" : "Create")"
+                      asp-route-id="@Model.Id">
+
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger d-none-if-empty"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label">@d.NameLabel</label>
+                        <input asp-for="Name" class="form-control" autofocus autocomplete="off" />
+                        <span asp-validation-for="Name" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            @(Model.IsEdit ? "Update" : "Save")
+                        </button>
+                        <a class="btn btn-outline-secondary" asp-controller="@d.Controller" asp-action="Index">
+                            Close
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

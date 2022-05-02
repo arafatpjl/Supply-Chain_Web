@@ -1,0 +1,27 @@
+@model ReportHeaderViewModel
+@*
+    Shared heading for every report screen: company, criteria, row count and the PDF export.
+    The legacy reports each carried their own header inside a hand-built .rpt file.
+*@
+<div class="card mb-2">
+    <div class="card-body py-2 d-flex justify-content-between align-items-start gap-3">
+        <div>
+            <strong>@Model.CompanyName</strong>
+            @if (!string.IsNullOrWhiteSpace(Model.CompanyAddress))
+            {
+                <span class="text-body-secondary small d-block">@Model.CompanyAddress</span>
+            }
+            @if (Model.Criteria.Count > 0)
+            {
+                <span class="text-body-secondary small d-block">
+                    @string.Join("  ·  ", Model.Criteria.Select(c => $"{c.Label}: {c.Value}"))
+                </span>
+            }
+            <span class="text-body-secondary small">
+                @Model.RowCount row@(Model.RowCount == 1 ? "" : "s")
+                &middot; generated @Model.GeneratedAt.ToString("dd-MMM-yyyy HH:mm") UTC by @Model.GeneratedBy
+            </span>
+        </div>
+        <a class="btn btn-sm btn-outline-danger flex-shrink-0" href="@Model.BuildExportUrl()">Export PDF</a>
+    </div>
+</div>

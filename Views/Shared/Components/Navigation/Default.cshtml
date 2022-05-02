@@ -1,0 +1,158 @@
+@model NavigationViewModel
+@*
+    Menu structure mirrors the legacy MDI menu bar so that existing users recognise it:
+    House Keeping / Data Entry / Reports / Option.
+
+    Items not yet migrated are rendered disabled with the wave that will deliver them, which
+    keeps the incremental migration visible rather than hiding unfinished work.
+*@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" asp-controller="Home" asp-action="Index">
+            Supply&nbsp;Chain
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#mainNav" aria-controls="mainNav"
+                aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="mainNav">
+            <ul class="navbar-nav me-auto">
+                @if (Model.CanViewMasterData)
+                {
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">House Keeping</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" asp-controller="Items" asp-action="Index">Item Name</a></li>
+                        <li><a class="dropdown-item" asp-controller="ItemTypes" asp-action="Index">Item Group</a></li>
+                        <li><hr class="dropdown-divider" /></li>
+                        <li><a class="dropdown-item" asp-controller="Suppliers" asp-action="Index">Supplier</a></li>
+                        <li><a class="dropdown-item" asp-controller="Parties" asp-action="Index">Party (Bill)</a></li>
+                        <li><hr class="dropdown-divider" /></li>
+                        <li><a class="dropdown-item" asp-controller="Countries" asp-action="Index">Country</a></li>
+                        <li><a class="dropdown-item" asp-controller="PfNumbers" asp-action="Index">File No.</a></li>
+                        <li><a class="dropdown-item" asp-controller="AccountsHeads" asp-action="Index">Accounts Head</a></li>
+                        <li><a class="dropdown-item" asp-controller="Banks" asp-action="Index">Bank</a></li>
+                    </ul>
+                </li>
+                }
+
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">Data Entry</a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a class="dropdown-item" asp-controller="PurchaseOrders" asp-action="Index">
+                                Purchase Order
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" asp-controller="Mrrs" asp-action="Index">MRR Information</a>
+                        </li>
+                        <li><a class="dropdown-item" asp-controller="Bills" asp-action="Index">Bill Details</a></li>
+                        <li><a class="dropdown-item" asp-controller="ChequeBooks" asp-action="Index">Cheque Info</a></li>
+                        <li><a class="dropdown-item" asp-controller="Statements" asp-action="Index">Cash &amp; Credit Statement</a></li>
+                    </ul>
+                </li>
+
+                @if (Model.CanViewReports)
+                {
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">Reports</a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" asp-controller="Reports" asp-action="TransactionStatement"
+                                   asp-route-mode="BillNo">Bill Wise Report</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-controller="Reports" asp-action="TransactionStatement"
+                                   asp-route-mode="MrrNo">MRR Wise Report</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-controller="Reports" asp-action="TransactionStatement"
+                                   asp-route-mode="ChallanNo">Challan Wise Report</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-controller="Reports" asp-action="TransactionStatement"
+                                   asp-route-mode="Transaction">Transaction Wise Report</a>
+                            </li>
+                            <li><hr class="dropdown-divider" /></li>
+                            <li>
+                                <a class="dropdown-item" asp-controller="Reports" asp-action="Index">All Reports</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-controller="Reports" asp-action="PartyStatement">
+                                    Party Statement
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-controller="Reports" asp-action="MonthlyStatement">
+                                    Monthly Statement
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                }
+
+                @if (Model.CanViewCompanies || Model.CanViewUsers)
+                {
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">Option</a>
+                        <ul class="dropdown-menu">
+                            @if (Model.CanViewCompanies)
+                            {
+                                <li>
+                                    <a class="dropdown-item" asp-controller="Company" asp-action="Index">
+                                        Switch Company
+                                    </a>
+                                </li>
+                            }
+                            @if (Model.CanViewUsers)
+                            {
+                                <li><hr class="dropdown-divider" /></li>
+                                <li>
+                                    <a class="dropdown-item" asp-controller="Users" asp-action="Index">
+                                        Create or Modify User
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </li>
+                }
+            </ul>
+
+            <ul class="navbar-nav">
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Account" asp-action="ChangePassword">
+                            Change Password
+                        </a>
+                    </li>
+                }
+                @if (!string.IsNullOrEmpty(Model.CompanyShortCode))
+                {
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Company" asp-action="Index"
+                           title="@Model.CompanyName">
+                            <span class="badge text-bg-primary">@Model.CompanyShortCode</span>
+                        </a>
+                    </li>
+                }
+                <li class="nav-item">
+                    <span class="nav-link text-white-50">@Model.UserName</span>
+                </li>
+                <li class="nav-item">
+                    <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-link nav-link">Sign out</button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
