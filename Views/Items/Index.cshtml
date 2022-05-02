@@ -1,0 +1,86 @@
+@model ItemIndexViewModel
+@{ ViewData["Title"] = "Items"; }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h4 mb-0">Items</h1>
+        <small class="text-body-secondary">Replaces <code>frmNewItemName.frm</code></small>
+    </div>
+    <a class="btn btn-primary" asp-action="Create">New Item</a>
+</div>
+
+<form method="get" asp-action="Index" class="mb-3">
+    <div class="row g-2 align-items-center">
+        <div class="col-auto">
+            <input type="search" name="search" value="@Model.SearchTerm" class="form-control"
+                   placeholder="Search items" aria-label="Search" />
+        </div>
+        <div class="col-auto">
+            <select name="itemTypeId" class="form-select" aria-label="Filter by item type">
+                <option value="">All item types</option>
+                @foreach (var type in Model.ItemTypes)
+                {
+                    <option value="@type.Id" selected="@(type.Id == Model.ItemTypeId)">@type.Name</option>
+                }
+            </select>
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-outline-secondary">Search</button>
+            @if (!string.IsNullOrEmpty(Model.SearchTerm) || Model.ItemTypeId.HasValue)
+            {
+                <a class="btn btn-outline-secondary" asp-action="Index">Clear</a>
+            }
+        </div>
+    </div>
+</form>
+
+<div class="card">
+    <div class="sc-grid-wrapper">
+        <table class="table table-sm table-hover mb-0 align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Name of Item</th>
+                    <th scope="col">Under of Item</th>
+                    <th scope="col" class="text-end" style="width: 12rem;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Results.Items.Count == 0)
+                {
+                    <tr><td colspan="3" class="text-center text-body-secondary py-4">No items found.</td></tr>
+                }
+                else
+                {
+                    @foreach (var row in Model.Results.Items)
+                    {
+                        <tr>
+                            <td>@row.Name</td>
+                            <td><span class="badge text-bg-light">@row.ItemTypeName</span></td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@row.Id">Edit</a>
+                                <form method="post" class="d-inline" asp-action="Delete" asp-route-id="@row.Id"
+                                      onsubmit="return confirm('Are you sure to Delete?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer">
+        <partial name="_Pager" model="@(new PagerViewModel
+                                        {
+                                            PageNumber = Model.Results.PageNumber,
+                                            TotalPages = Model.Results.TotalPages,
+                                            TotalCount = Model.Results.TotalCount,
+                                            BasePath = Url.Action("Index")!,
+                                            RouteValues = new Dictionary<string, string?>
+                                            {
+                                                ["search"] = Model.SearchTerm,
+                                                ["itemTypeId"] = Model.ItemTypeId?.ToString(),
+                                            },
+                                        })" />
+    </div>
+</div>

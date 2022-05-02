@@ -1,0 +1,48 @@
+@model ItemFormViewModel
+@{ ViewData["Title"] = Model.IsEdit ? "Edit Item" : "New Item"; }
+
+<div class="row">
+    <div class="col-md-6 col-lg-5">
+        <h1 class="h4 mb-3">@ViewData["Title"]</h1>
+
+        <div class="card">
+            <div class="card-body">
+                <form method="post" asp-action="@(Model.IsEdit ? "Edit" : "Create")" asp-route-id="@Model.Id">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger d-none-if-empty"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label"></label>
+                        <input asp-for="Name" class="form-control" autofocus autocomplete="off" />
+                        <span asp-validation-for="Name" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="ItemTypeId" class="form-label"></label>
+                        <select asp-for="ItemTypeId" class="form-select">
+                            <option value="">— Select —</option>
+                            @foreach (var type in Model.ItemTypes)
+                            {
+                                <option value="@type.Id" selected="@(type.Id == Model.ItemTypeId)">@type.Name</option>
+                            }
+                        </select>
+                        <span asp-validation-for="ItemTypeId" class="text-danger small"></span>
+                        @if (Model.ItemTypes.Count == 0)
+                        {
+                            <div class="form-text text-warning">
+                                No item types exist yet.
+                                <a asp-controller="ItemTypes" asp-action="Create">Create one first</a>.
+                            </div>
+                        }
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">@(Model.IsEdit ? "Update" : "Save")</button>
+                        <a class="btn btn-outline-secondary" asp-action="Index">Close</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }
