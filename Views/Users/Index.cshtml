@@ -1,0 +1,97 @@
+@model UserIndexViewModel
+@{ ViewData["Title"] = "Users"; }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h4 mb-0">Users</h1>
+        <small class="text-body-secondary">Replaces <code>frmCreateUser.frm</code></small>
+    </div>
+    <a class="btn btn-primary" asp-action="Create">New User</a>
+</div>
+
+<form method="get" asp-action="Index" class="mb-3">
+    <div class="input-group" style="max-width: 28rem;">
+        <input type="search" name="search" value="@Model.SearchTerm" class="form-control"
+               placeholder="Search users" aria-label="Search" />
+        <button type="submit" class="btn btn-outline-secondary">Search</button>
+        @if (!string.IsNullOrEmpty(Model.SearchTerm))
+        {
+            <a class="btn btn-outline-secondary" asp-action="Index">Clear</a>
+        }
+    </div>
+</form>
+
+<div class="card">
+    <div class="sc-grid-wrapper">
+        <table class="table table-sm table-hover mb-0 align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">User Name</th>
+                    <th scope="col">Full Name</th>
+                    <th scope="col">Roles</th>
+                    <th scope="col" class="sc-numeric">Companies</th>
+                    <th scope="col" class="sc-numeric">Direct perms</th>
+                    <th scope="col">Status</th>
+                    <th scope="col" class="text-end" style="width: 20rem;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Results.Items.Count == 0)
+                {
+                    <tr><td colspan="7" class="text-center text-body-secondary py-4">No users found.</td></tr>
+                }
+                else
+                {
+                    @foreach (var user in Model.Results.Items)
+                    {
+                        <tr>
+                            <td><code>@user.UserName</code></td>
+                            <td>@user.FullName</td>
+                            <td>
+                                @if (user.Roles.Count == 0)
+                                {
+                                    <span class="text-body-secondary">—</span>
+                                }
+                                else
+                                {
+                                    @foreach (var role in user.Roles)
+                                    {
+                                        <span class="badge text-bg-light">@role</span>
+                                    }
+                                }
+                            </td>
+                            <td class="sc-numeric">@user.CompanyCount</td>
+                            <td class="sc-numeric">@user.PermissionCount</td>
+                            <td>
+                                @if (user.IsActive)
+                                {
+                                    <span class="badge text-bg-success">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge text-bg-secondary">Inactive</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@user.Id">Edit</a>
+                                <a class="btn btn-sm btn-outline-secondary" asp-action="Permissions" asp-route-id="@user.Id">Permissions</a>
+                                <a class="btn btn-sm btn-outline-secondary" asp-action="CompanyAccess" asp-route-id="@user.Id">Companies</a>
+                                <a class="btn btn-sm btn-outline-secondary" asp-action="ResetPassword" asp-route-id="@user.Id">Password</a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer">
+        <partial name="_Pager" model="@(new PagerViewModel
+                                        {
+                                            PageNumber = Model.Results.PageNumber,
+                                            TotalPages = Model.Results.TotalPages,
+                                            TotalCount = Model.Results.TotalCount,
+                                            BasePath = Url.Action("Index")!,
+                                            RouteValues = new Dictionary<string, string?> { ["search"] = Model.SearchTerm },
+                                        })" />
+    </div>
+</div>

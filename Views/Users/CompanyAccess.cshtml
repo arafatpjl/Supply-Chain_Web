@@ -1,0 +1,59 @@
+@model UserCompanyAccessViewModel
+@{ ViewData["Title"] = "Company Access"; }
+
+<h1 class="h4 mb-1">Company Access</h1>
+<p class="text-body-secondary">for <code>@Model.UserName</code></p>
+
+<div class="alert alert-light border small d-flex align-items-start gap-2">
+    <span>ℹ️</span>
+    <div>
+        Replaces <code>frmPermissionCom.frm</code>. In the legacy system each company was a separate
+        database and access meant being allowed to connect to it. Here it scopes every query
+        through the tenant filter.
+    </div>
+</div>
+
+<form method="post" asp-action="CompanyAccess" asp-route-id="@Model.Id">
+    <div class="card">
+        <div class="sc-grid-wrapper">
+            <table class="table table-sm mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col" style="width: 6rem;">Access</th>
+                        <th scope="col">Company</th>
+                        <th scope="col">Short Code</th>
+                        <th scope="col" style="width: 8rem;">Default</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var company in Model.Companies)
+                    {
+                        <tr>
+                            <td>
+                                <input class="form-check-input" type="checkbox" name="SelectedCompanyIds"
+                                       value="@company.CompanyId" id="company-@company.CompanyId"
+                                       checked="@company.IsGranted"
+                                       aria-label="Grant access to @company.Name" />
+                            </td>
+                            <td><label for="company-@company.CompanyId">@company.Name</label></td>
+                            <td><code>@company.ShortCode</code></td>
+                            <td>
+                                <input class="form-check-input" type="radio" name="DefaultCompanyId"
+                                       value="@company.CompanyId"
+                                       checked="@(Model.DefaultCompanyId == company.CompanyId)"
+                                       aria-label="Make @company.Name the default company" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Update</button>
+            <a class="btn btn-outline-secondary" asp-action="Index">Close</a>
+        </div>
+    </div>
+    <div class="form-text mt-2">
+        At least one company must be selected. The default is the company chosen on sign-in.
+    </div>
+</form>
