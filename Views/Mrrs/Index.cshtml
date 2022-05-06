@@ -1,0 +1,119 @@
+@model MrrIndexViewModel
+@{ ViewData["Title"] = "Goods Receipts (MRR)"; }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h4 mb-0">Goods Receipts</h1>
+        <small class="text-body-secondary">
+            Replaces <code>frmMrrReceiveChallan.frm</code> and <code>frmMrrReceiveChallanOtherCurr.frm</code>
+        </small>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary" asp-action="Balance">PO &amp; MRR Balance</a>
+        <a class="btn btn-primary" asp-action="Create">New MRR</a>
+    </div>
+</div>
+
+<div class="alert alert-warning border small d-flex align-items-start gap-2">
+    <span>⚠️</span>
+    <div>
+        Merging the two legacy forms removed a data-corruption bug: deleting a line on the
+        foreign-currency form wrote <code>DELETEROW = 1</code> to the <strong>local-currency</strong>
+        table. The line the user deleted stayed, and a different document could be marked deleted
+        instead. See <code>docs/analysis/mrr-currency-variant-diff.md</code>.
+    </div>
+</div>
+
+<form method="get" asp-action="Index" class="mb-3">
+    <div class="row g-2 align-items-center">
+        <div class="col-auto">
+            <input type="search" name="search" value="@Model.SearchTerm" class="form-control"
+                   placeholder="MRR no, challan no or supplier" aria-label="Search" />
+        </div>
+        <div class="col-auto">
+            <select name="supplierId" class="form-select" aria-label="Filter by supplier">
+                <option value="">All suppliers</option>
+                @foreach (var supplier in Model.Suppliers)
+                {
+                    <option value="@supplier.Id" selected="@(supplier.Id == Model.SupplierId)">@supplier.Name</option>
+                }
+            </select>
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-outline-secondary">Search</button>
+            @if (!string.IsNullOrEmpty(Model.SearchTerm) || Model.SupplierId.HasValue)
+            {
+                <a class="btn btn-outline-secondary" asp-action="Index">Clear</a>
+            }
+        </div>
+    </div>
+</form>
+
+<div class="card">
+    <div class="sc-grid-wrapper">
+        <table class="table table-sm table-hover mb-0 align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">MRR No</th>
+                    <th scope="col">Supplier</th>
+                    <th scope="col">MRR Date</th>
+                    <th scope="col" class="sc-numeric">Lines</th>
+                    <th scope="col" class="sc-numeric">Total</th>
+                    <th scope="col">Approved</th>
+                    <th scope="col" class="text-end" style="width: 14rem;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Results.Items.Count == 0)
+                {
+                    <tr><td colspan="7" class="text-center text-body-secondary py-4">No Data found !</td></tr>
+                }
+                else
+                {
+                    @foreach (var mrr in Model.Results.Items)
+                    {
+                        <tr>
+                            <td><code>@mrr.Number</code></td>
+                            <td>@mrr.SupplierName</td>
+                            <td>@mrr.ReceiptDate.ToString("dd-MMM-yyyy")</td>
+                            <td class="sc-numeric">@mrr.LineCount</td>
+                            <td class="sc-numeric">@mrr.Total.ToString("N2") @mrr.Currency</td>
+                            <td>
+                                @if (mrr.IsApproved)
+                                {
+                                    <span class="badge text-bg-success">Signed</span>
+                                }
+                                else
+                                {
+                                    <span class="badge text-bg-secondary">Pending</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-outline-secondary" asp-action="Details" asp-route-id="@mrr.Id">View</a>
+                                <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@mrr.Id">Edit</a>
+                                <form method="post" class="d-inline" asp-action="Delete" asp-route-id="@mrr.Id"
+                                      onsubmit="return confirm('Are you sure to Delete?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer">
+        <partial name="_Pager" model="@(new PagerViewModel
+                                        {
+                                            PageNumber = Model.Results.PageNumber,
+                                            TotalPages = Model.Results.TotalPages,
+                                            TotalCount = Model.Results.TotalCount,
+                                            BasePath = Url.Action("Index")!,
+                                            RouteValues = new Dictionary<string, string?>
+                                            {
+                                                ["search"] = Model.SearchTerm,
+                                                ["supplierId"] = Model.SupplierId?.ToString(),
+                                            },
+                                        })" />
+    </div>
+</div>

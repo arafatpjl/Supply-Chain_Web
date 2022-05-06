@@ -1,0 +1,104 @@
+@model SupplyChain.Application.Receiving.MrrDto
+@{ ViewData["Title"] = $"MRR {Model.Number}"; }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h4 mb-0">Goods Receipt <code>@Model.Number</code></h1>
+        <small class="text-body-secondary">@Model.SupplierName</small>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary" asp-action="Edit" asp-route-id="@Model.Id">Edit</a>
+        <a class="btn btn-outline-secondary" asp-action="Index">Close</a>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">MRR Date</dt>
+                    <dd class="col-sm-8">@Model.ReceiptDate.ToString("dd-MMM-yyyy")</dd>
+                    <dt class="col-sm-4">Currency</dt>
+                    <dd class="col-sm-8">@Model.Currency</dd>
+                    <dt class="col-sm-4">Goods Value</dt>
+                    <dd class="col-sm-8">@Model.GoodsValue.ToString("N2")</dd>
+                    <dt class="col-sm-4">Charges</dt>
+                    <dd class="col-sm-8">@Model.Charges.ToString("N2")</dd>
+                    <dt class="col-sm-4">Discount</dt>
+                    <dd class="col-sm-8">@Model.Discount.ToString("N2")</dd>
+                    <dt class="col-sm-4 fw-semibold">Total</dt>
+                    <dd class="col-sm-8 fw-semibold">@Model.Total.ToString("N2") @Model.Currency</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-header fw-semibold">Approvals</div>
+            <div class="card-body">
+                @if (Model.Approval is { } approval)
+                {
+                    <dl class="row mb-0 small">
+                        <dt class="col-7">Quality Certified</dt><dd class="col-5">@approval.QualityCertifiedBy</dd>
+                        <dt class="col-7">Prepared</dt><dd class="col-5">@approval.PreparedBy</dd>
+                        <dt class="col-7">Quantity Checked</dt><dd class="col-5">@approval.QuantityCheckedBy</dd>
+                        <dt class="col-7">Manager</dt><dd class="col-5">@approval.ManagerBy</dd>
+                        <dt class="col-7">Quality Senior Manager</dt><dd class="col-5">@approval.SeniorManagerBy</dd>
+                    </dl>
+                }
+                else
+                {
+                    <p class="text-body-secondary mb-0 small">Not yet signed off.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="sc-grid-wrapper">
+        <table class="table table-sm mb-0 align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Item</th>
+                    <th scope="col">P.O. No</th>
+                    <th scope="col">PR No.</th>
+                    <th scope="col">Challan</th>
+                    <th scope="col">Container</th>
+                    <th scope="col" class="sc-numeric">Ordered</th>
+                    <th scope="col" class="sc-numeric">Received</th>
+                    <th scope="col">Unit</th>
+                    <th scope="col" class="sc-numeric">Unit Price</th>
+                    <th scope="col" class="sc-numeric">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var line in Model.Lines)
+                {
+                    <tr>
+                        <td>@line.ItemName</td>
+                        <td class="text-body-secondary">@(line.PurchaseOrderNumber ?? "—")</td>
+                        <td>@line.PrNo</td>
+                        <td>@line.ChallanNo <span class="text-body-secondary">@line.ChallanDate.ToString("dd-MMM-yy")</span></td>
+                        <td class="text-body-secondary">@line.ContainerNo</td>
+                        <td class="sc-numeric">@line.OrderedQty.ToString("N2")</td>
+                        <td class="sc-numeric @(line.ReceivedQty > line.OrderedQty && line.OrderedQty > 0 ? "text-danger fw-semibold" : "")">
+                            @line.ReceivedQty.ToString("N2")
+                        </td>
+                        <td>@line.QtyUnit</td>
+                        <td class="sc-numeric">@line.UnitPrice.ToString("N2")</td>
+                        <td class="sc-numeric">@line.LineTotal.ToString("N2")</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr class="fw-semibold border-top">
+                    <td colspan="9" class="text-end">Goods Value</td>
+                    <td class="sc-numeric">@Model.GoodsValue.ToString("N2")</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>

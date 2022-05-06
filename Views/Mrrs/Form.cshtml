@@ -1,0 +1,201 @@
+@model MrrFormViewModel
+@using SupplyChain.Domain.Enums
+@{ ViewData["Title"] = Model.IsEdit ? $"Edit MRR {Model.Number}" : "New Goods Receipt"; }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">@ViewData["Title"]</h1>
+    <a class="btn btn-outline-secondary" asp-action="Index">Close</a>
+</div>
+
+<form method="post" asp-action="@(Model.IsEdit ? "Edit" : "Create")" asp-route-id="@Model.Id">
+    <div asp-validation-summary="All" class="alert alert-danger d-none-if-empty"></div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label asp-for="SupplierId" class="form-label"></label>
+                    <select asp-for="SupplierId" class="form-select">
+                        <option value="">— Select —</option>
+                        @foreach (var supplier in Model.Suppliers)
+                        {
+                            <option value="@supplier.Id" selected="@(supplier.Id == Model.SupplierId)">@supplier.Name</option>
+                        }
+                    </select>
+                    <span asp-validation-for="SupplierId" class="text-danger small"></span>
+                </div>
+
+                <div class="col-md-2">
+                    <label asp-for="ReceiptDate" class="form-label"></label>
+                    <input asp-for="ReceiptDate" type="date" class="form-control" />
+                </div>
+
+                <div class="col-md-2">
+                    <label asp-for="Currency" class="form-label"></label>
+                    <select asp-for="Currency" class="form-select">
+                        @foreach (var currency in Enum.GetValues<CurrencyCode>())
+                        {
+                            <option value="@currency" selected="@(currency == Model.Currency)">@currency</option>
+                        }
+                    </select>
+                    <div class="form-text">Every line uses the receipt's currency.</div>
+                </div>
+
+                <div class="col-md-2">
+                    <label asp-for="Charges" class="form-label"></label>
+                    <input asp-for="Charges" type="number" step="0.01" class="form-control" />
+                </div>
+
+                <div class="col-md-2">
+                    <label asp-for="Discount" class="form-label"></label>
+                    <input asp-for="Discount" type="number" step="0.01" class="form-control" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="fw-semibold">Items Received</span>
+            <button type="button" class="btn btn-sm btn-outline-primary" id="addLine">Add Item</button>
+        </div>
+
+        <div class="sc-grid-wrapper">
+            <table class="table table-sm mb-0 align-middle" id="lineTable">
+                <thead>
+                    <tr>
+                        <th scope="col" style="min-width: 11rem;">Item</th>
+                        <th scope="col" style="min-width: 9rem;">P.O. No</th>
+                        <th scope="col" style="min-width: 7rem;">PR No.</th>
+                        <th scope="col" style="min-width: 7rem;">Challan No</th>
+                        <th scope="col" style="min-width: 9rem;">Challan Date</th>
+                        <th scope="col" style="min-width: 7rem;">Container</th>
+                        <th scope="col" style="min-width: 6rem;">Ordered</th>
+                        <th scope="col" style="min-width: 6rem;">Received</th>
+                        <th scope="col" style="min-width: 5rem;">Unit</th>
+                        <th scope="col" style="min-width: 7rem;">Unit Price</th>
+                        <th scope="col" class="sc-numeric" style="min-width: 7rem;">Total</th>
+                        <th scope="col" style="width: 3rem;"></th>
+                    </tr>
+                </thead>
+                <tbody id="lineBody">
+                    @for (var i = 0; i < Model.Lines.Count; i++)
+                    {
+                        <tr class="po-line">
+                            <td>
+                                <select name="Lines[@i].ItemId" class="form-select form-select-sm">
+                                    <option value="">— Select —</option>
+                                    @foreach (var item in Model.Items)
+                                    {
+                                        <option value="@item.Id" selected="@(item.Id == Model.Lines[i].ItemId)">@item.Name</option>
+                                    }
+                                </select>
+                            </td>
+                            <td>
+                                <select name="Lines[@i].PurchaseOrderId" class="form-select form-select-sm">
+                                    <option value="">— None —</option>
+                                    @foreach (var order in Model.PurchaseOrders)
+                                    {
+                                        <option value="@order.Id" selected="@(order.Id == Model.Lines[i].PurchaseOrderId)">@order.Name</option>
+                                    }
+                                </select>
+                            </td>
+                            <td><input name="Lines[@i].PrNo" value="@Model.Lines[i].PrNo" class="form-control form-control-sm" /></td>
+                            <td><input name="Lines[@i].ChallanNo" value="@Model.Lines[i].ChallanNo" class="form-control form-control-sm" /></td>
+                            <td><input name="Lines[@i].ChallanDate" value="@Model.Lines[i].ChallanDate.ToString("yyyy-MM-dd")" type="date" class="form-control form-control-sm" /></td>
+                            <td><input name="Lines[@i].ContainerNo" value="@Model.Lines[i].ContainerNo" class="form-control form-control-sm" /></td>
+                            <td><input name="Lines[@i].OrderedQty" value="@Model.Lines[i].OrderedQty" type="number" step="0.0001" class="form-control form-control-sm" /></td>
+                            <td><input name="Lines[@i].ReceivedQty" value="@Model.Lines[i].ReceivedQty" type="number" step="0.0001" class="form-control form-control-sm po-qty" /></td>
+                            <td><input name="Lines[@i].QtyUnit" value="@Model.Lines[i].QtyUnit" class="form-control form-control-sm" /></td>
+                            <td><input name="Lines[@i].UnitPrice" value="@Model.Lines[i].UnitPrice" type="number" step="0.0001" class="form-control form-control-sm po-price" /></td>
+                            <td class="sc-numeric po-total">0.00</td>
+                            <td><button type="button" class="btn btn-sm btn-outline-danger po-remove" aria-label="Remove line">&times;</button></td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr class="fw-semibold border-top">
+                        <td colspan="10" class="text-end">Goods Value</td>
+                        <td class="sc-numeric" id="grandTotal">0.00</td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header fw-semibold">Approvals</div>
+        <div class="card-body">
+            <p class="text-body-secondary small">
+                Five sign-offs, as recorded in the legacy <code>Signature</code> table. Leave all
+                blank to save the receipt unapproved.
+            </p>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label asp-for="QualityCertifiedBy" class="form-label"></label>
+                    <input asp-for="QualityCertifiedBy" class="form-control" autocomplete="off" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="PreparedBy" class="form-label"></label>
+                    <input asp-for="PreparedBy" class="form-control" autocomplete="off" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="QuantityCheckedBy" class="form-label"></label>
+                    <input asp-for="QuantityCheckedBy" class="form-control" autocomplete="off" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="ManagerBy" class="form-label"></label>
+                    <input asp-for="ManagerBy" class="form-control" autocomplete="off" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="SeniorManagerBy" class="form-label"></label>
+                    <input asp-for="SeniorManagerBy" class="form-control" autocomplete="off" />
+                </div>
+            </div>
+        </div>
+        <div class="card-footer d-flex gap-2">
+            <button type="submit" class="btn btn-primary">@(Model.IsEdit ? "Update" : "Save")</button>
+            <a class="btn btn-outline-secondary" asp-action="Index">Close</a>
+        </div>
+    </div>
+</form>
+
+@* Reuses the purchase order line editor: same add, remove, renumber and running-total behaviour. *@
+<template id="lineTemplate">
+    <tr class="po-line">
+        <td>
+            <select name="Lines[__i__].ItemId" class="form-select form-select-sm">
+                <option value="">— Select —</option>
+                @foreach (var item in Model.Items)
+                {
+                    <option value="@item.Id">@item.Name</option>
+                }
+            </select>
+        </td>
+        <td>
+            <select name="Lines[__i__].PurchaseOrderId" class="form-select form-select-sm">
+                <option value="">— None —</option>
+                @foreach (var order in Model.PurchaseOrders)
+                {
+                    <option value="@order.Id">@order.Name</option>
+                }
+            </select>
+        </td>
+        <td><input name="Lines[__i__].PrNo" class="form-control form-control-sm" /></td>
+        <td><input name="Lines[__i__].ChallanNo" class="form-control form-control-sm" /></td>
+        <td><input name="Lines[__i__].ChallanDate" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" type="date" class="form-control form-control-sm" /></td>
+        <td><input name="Lines[__i__].ContainerNo" class="form-control form-control-sm" /></td>
+        <td><input name="Lines[__i__].OrderedQty" type="number" step="0.0001" class="form-control form-control-sm" /></td>
+        <td><input name="Lines[__i__].ReceivedQty" type="number" step="0.0001" class="form-control form-control-sm po-qty" /></td>
+        <td><input name="Lines[__i__].QtyUnit" class="form-control form-control-sm" /></td>
+        <td><input name="Lines[__i__].UnitPrice" type="number" step="0.0001" class="form-control form-control-sm po-price" /></td>
+        <td class="sc-numeric po-total">0.00</td>
+        <td><button type="button" class="btn btn-sm btn-outline-danger po-remove" aria-label="Remove line">&times;</button></td>
+    </tr>
+</template>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/line-editor.js" asp-append-version="true"></script>
+}

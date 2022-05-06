@@ -1,0 +1,112 @@
+@model PurchaseOrderBalanceViewModel
+@{ ViewData["Title"] = "PO & MRR Balance"; }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h4 mb-0">PO &amp; MRR Balance Quantity</h1>
+        <small class="text-body-secondary">Replaces <code>rptPOBalanceQty.rpt</code></small>
+    </div>
+    <a class="btn btn-outline-secondary" asp-action="Index">Goods Receipts</a>
+</div>
+
+<div class="alert alert-light border small d-flex align-items-start gap-2">
+    <span>ℹ️</span>
+    <div>
+        The legacy figures came from <code>TEMPSUM</code>: a shared physical table emptied on every
+        run, filled by one aggregate query per line in a loop, then read back. Concurrent users
+        overwrote each other's numbers, and the cumulative filter compared identifiers as strings,
+        so <code>'10'</code> sorted before <code>'9'</code>. This is one grouped query.
+    </div>
+</div>
+
+<form method="get" asp-action="Balance" class="card mb-3">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-sm-6 col-lg-3">
+                <label asp-for="PurchaseOrderId" class="form-label"></label>
+                <select asp-for="PurchaseOrderId" class="form-select">
+                    <option value="">All purchase orders</option>
+                    @foreach (var order in Model.PurchaseOrders)
+                    {
+                        <option value="@order.Id" selected="@(order.Id == Model.PurchaseOrderId)">@order.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <label asp-for="SupplierId" class="form-label"></label>
+                <select asp-for="SupplierId" class="form-select">
+                    <option value="">All suppliers</option>
+                    @foreach (var supplier in Model.Suppliers)
+                    {
+                        <option value="@supplier.Id" selected="@(supplier.Id == Model.SupplierId)">@supplier.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-auto">
+                <div class="form-check">
+                    <input asp-for="OverReceivedOnly" class="form-check-input" />
+                    <label asp-for="OverReceivedOnly" class="form-check-label"></label>
+                </div>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">Preview</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<div class="card">
+    <div class="sc-grid-wrapper">
+        <table class="table table-sm table-hover mb-0 align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">P.O. No</th>
+                    <th scope="col">Supplier</th>
+                    <th scope="col">Item</th>
+                    <th scope="col">PR No.</th>
+                    <th scope="col" class="sc-numeric">Ordered</th>
+                    <th scope="col" class="sc-numeric">Received</th>
+                    <th scope="col" class="sc-numeric">Balance</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Balances.Count == 0)
+                {
+                    <tr><td colspan="7" class="text-center text-body-secondary py-4">No Data found !</td></tr>
+                }
+                else
+                {
+                    @foreach (var row in Model.Balances)
+                    {
+                        <tr class="@(row.IsOverReceived ? "table-warning" : "")">
+                            <td><code>@row.PurchaseOrderNumber</code></td>
+                            <td>@row.SupplierName</td>
+                            <td>@row.ItemName</td>
+                            <td>@row.PrNo</td>
+                            <td class="sc-numeric">@row.OrderedQty.ToString("N2")</td>
+                            <td class="sc-numeric">@row.ReceivedQty.ToString("N2")</td>
+                            <td class="sc-numeric @(row.IsOverReceived ? "text-danger fw-semibold" : "")">
+                                @row.Balance.ToString("N2")
+                                @if (row.IsOverReceived)
+                                {
+                                    <span class="badge text-bg-danger ms-1">over</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+            @if (Model.Balances.Count > 0)
+            {
+                <tfoot>
+                    <tr class="fw-semibold border-top">
+                        <td colspan="4" class="text-end">Total</td>
+                        <td class="sc-numeric">@Model.Balances.Sum(b => b.OrderedQty).ToString("N2")</td>
+                        <td class="sc-numeric">@Model.Balances.Sum(b => b.ReceivedQty).ToString("N2")</td>
+                        <td class="sc-numeric">@Model.Balances.Sum(b => b.Balance).ToString("N2")</td>
+                    </tr>
+                </tfoot>
+            }
+        </table>
+    </div>
+</div>
