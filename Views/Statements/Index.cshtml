@@ -1,0 +1,120 @@
+@model StatementIndexViewModel
+@using SupplyChain.Domain.Enums
+@using SupplyChain.Web.Reporting
+@{ ViewData["Title"] = "Cash & Credit Statements"; }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h4 mb-0">Cash &amp; Credit Statements</h1>
+        <small class="text-body-secondary">Replaces <code>frmStatementCheque.frm</code></small>
+    </div>
+    <a class="btn btn-primary" asp-action="Create">New Statement</a>
+</div>
+
+<div class="alert alert-light border small d-flex align-items-start gap-2">
+    <span>ℹ️</span>
+    <div>
+        The last screen in the system that wrote to a table this application only read. Wave 3 built
+        the statement entity for the reports; this completes it.
+    </div>
+</div>
+
+<form method="get" asp-action="Index" class="mb-3">
+    <div class="row g-2 align-items-center">
+        <div class="col-auto">
+            <input type="search" name="search" value="@Model.SearchTerm" class="form-control"
+                   placeholder="Bill no, MRR no or party" aria-label="Search" />
+        </div>
+        <div class="col-auto">
+            <select name="type" class="form-select" aria-label="Filter by type">
+                <option value="">All types</option>
+                @foreach (var type in Enum.GetValues<TransactionType>())
+                {
+                    <option value="@type" selected="@(Model.Type == type)">
+                        @TransactionStatementColumns.Describe(type)
+                    </option>
+                }
+            </select>
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-outline-secondary">Search</button>
+            @if (!string.IsNullOrEmpty(Model.SearchTerm) || Model.Type.HasValue)
+            {
+                <a class="btn btn-outline-secondary" asp-action="Index">Clear</a>
+            }
+        </div>
+    </div>
+</form>
+
+<div class="card">
+    <div class="sc-grid-wrapper">
+        <table class="table table-sm table-hover mb-0 align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Statement No</th>
+                    <th scope="col">Type</th>
+                    <th scope="col">Transaction Date</th>
+                    <th scope="col" class="sc-numeric">Entries</th>
+                    <th scope="col" class="sc-numeric">Total</th>
+                    <th scope="col" class="text-end" style="width: 14rem;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Results.Items.Count == 0)
+                {
+                    <tr><td colspan="6" class="text-center text-body-secondary py-4">No Data found !</td></tr>
+                }
+                else
+                {
+                    @foreach (var s in Model.Results.Items)
+                    {
+                        var route = new
+                        {
+                            statementNo = s.StatementNo,
+                            type = s.Type,
+                            transactionDate = s.TransactionDate.ToString("yyyy-MM-dd"),
+                        };
+
+                        <tr>
+                            <td><code>@s.StatementNo</code></td>
+                            <td>@TransactionStatementColumns.Describe(s.Type)</td>
+                            <td>@s.TransactionDate.ToString("dd-MMM-yyyy")</td>
+                            <td class="sc-numeric">@s.LineCount</td>
+                            <td class="sc-numeric">@s.Total.ToString("N2")</td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-outline-secondary" asp-action="Details" asp-all-route-data="@ToRoute(route)">View</a>
+                                <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-all-route-data="@ToRoute(route)">Edit</a>
+                                <form method="post" class="d-inline" asp-action="Delete" asp-all-route-data="@ToRoute(route)"
+                                      onsubmit="return confirm('Are you sure to Delete?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer">
+        <partial name="_Pager" model="@(new PagerViewModel
+                                        {
+                                            PageNumber = Model.Results.PageNumber,
+                                            TotalPages = Model.Results.TotalPages,
+                                            TotalCount = Model.Results.TotalCount,
+                                            BasePath = Url.Action("Index")!,
+                                            RouteValues = new Dictionary<string, string?>
+                                            {
+                                                ["search"] = Model.SearchTerm,
+                                                ["type"] = Model.Type?.ToString(),
+                                            },
+                                        })" />
+    </div>
+</div>
+
+@functions {
+    // A statement is identified by three values rather than a single key, because the legacy table
+    // had no surrogate key for the statement itself — only for its lines.
+    static Dictionary<string, string> ToRoute(object route) =>
+        route.GetType().GetProperties()
+            .ToDictionary(p => p.Name, p => p.GetValue(route)?.ToString() ?? string.Empty);
+}
