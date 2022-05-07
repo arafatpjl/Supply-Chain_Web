@@ -1,0 +1,50 @@
+@model SupplierFormViewModel
+@{ ViewData["Title"] = Model.IsEdit ? "Edit Supplier" : "New Supplier"; }
+
+<div class="row">
+    <div class="col-md-7 col-lg-6">
+        <h1 class="h4 mb-3">@ViewData["Title"]</h1>
+
+        <div class="card">
+            <div class="card-body">
+                <form method="post" asp-action="@(Model.IsEdit ? "Edit" : "Create")" asp-route-id="@Model.Id">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger d-none-if-empty"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label"></label>
+                        <input asp-for="Name" class="form-control" autofocus autocomplete="off" />
+                        <span asp-validation-for="Name" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Address" class="form-label"></label>
+                        <textarea asp-for="Address" class="form-control" rows="3"></textarea>
+                        <span asp-validation-for="Address" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="CountryId" class="form-label"></label>
+                        <select asp-for="CountryId" class="form-select">
+                            <option value="">— None —</option>
+                            @foreach (var country in Model.Countries)
+                            {
+                                <option value="@country.Id" selected="@(country.Id == Model.CountryId)">@country.Name</option>
+                            }
+                        </select>
+                        <div class="form-text">
+                            The legacy schema stored the country name as free text; this is now a reference.
+                        </div>
+                        <span asp-validation-for="CountryId" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">@(Model.IsEdit ? "Update" : "Save")</button>
+                        <a class="btn btn-outline-secondary" asp-action="Index">Close</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }
