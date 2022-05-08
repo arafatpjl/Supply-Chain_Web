@@ -1,0 +1,66 @@
+@model SupplyChain.Application.Purchasing.PurchaseOrderDto
+@{ ViewData["Title"] = $"P.O. {Model.Number}"; }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h4 mb-0">Purchase Order <code>@Model.Number</code></h1>
+        <small class="text-body-secondary">@Model.SupplierName</small>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary" asp-action="Edit" asp-route-id="@Model.Id">Edit</a>
+        <a class="btn btn-outline-secondary" asp-action="Index">Close</a>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-3">P.O. Date</dt>
+            <dd class="col-sm-3">@Model.OrderDate.ToString("dd-MMM-yyyy")</dd>
+            <dt class="col-sm-3">Period</dt>
+            <dd class="col-sm-3">
+                @(Model.FromDate?.ToString("dd-MMM-yyyy") ?? "—") to @(Model.ToDate?.ToString("dd-MMM-yyyy") ?? "—")
+            </dd>
+        </dl>
+    </div>
+</div>
+
+<div class="card">
+    <div class="sc-grid-wrapper">
+        <table class="table table-sm mb-0 align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Item</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">PR No.</th>
+                    <th scope="col" class="sc-numeric">Qty</th>
+                    <th scope="col">Unit</th>
+                    <th scope="col" class="sc-numeric">Unit Price</th>
+                    <th scope="col">Condition</th>
+                    <th scope="col" class="sc-numeric">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var line in Model.Lines)
+                {
+                    <tr>
+                        <td>@line.ItemName</td>
+                        <td class="text-body-secondary">@line.Description</td>
+                        <td>@line.PrNo</td>
+                        <td class="sc-numeric">@line.Quantity.ToString("N2")</td>
+                        <td>@line.QtyUnit</td>
+                        <td class="sc-numeric">@line.UnitPrice.ToString("N2") @line.Currency</td>
+                        <td class="text-body-secondary">@line.Condition</td>
+                        <td class="sc-numeric">@line.LineTotal.ToString("N2")</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr class="fw-semibold border-top">
+                    <td colspan="7" class="text-end">Total</td>
+                    <td class="sc-numeric">@Model.Total.ToString("N2") @Model.Currency</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
