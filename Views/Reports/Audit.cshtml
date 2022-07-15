@@ -1,0 +1,115 @@
+@model AuditReportViewModel
+@using SupplyChain.Application.Reports.Registers
+@{ ViewData["Title"] = "Audit Report"; }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h4 mb-0">Audit Report</h1>
+        <small class="text-body-secondary">
+            Replaces <code>frmRptMrrEditDeleteInfo</code>, <code>frmRptChallanEditDeleteInfo</code>
+            and <code>frmRptPOEditDeleteInfo</code>
+        </small>
+    </div>
+    <a class="btn btn-outline-secondary" asp-action="Index">All Reports</a>
+</div>
+
+<div class="alert alert-light border small d-flex align-items-start gap-2">
+    <span>ℹ️</span>
+    <div>
+        The legacy reports could say a document had been deleted, because <code>DeleteRow</code> was
+        set &mdash; but not <em>who</em> deleted it, because the schema recorded nothing else.
+        Deletions are now stamped like any other change.
+    </div>
+</div>
+
+<form method="get" asp-action="Audit" class="card mb-3">
+    <div class="card-body">
+        <input type="hidden" asp-for="HasRun" value="true" />
+        <div class="row g-3 align-items-end">
+            <div class="col-sm-6 col-lg-3">
+                <label asp-for="Subject" class="form-label"></label>
+                <select asp-for="Subject" class="form-select">
+                    @foreach (var subject in Enum.GetValues<AuditSubject>())
+                    {
+                        <option value="@subject" selected="@(subject == Model.Subject)">@subject</option>
+                    }
+                </select>
+            </div>
+            <div class="col-sm-6 col-lg-2">
+                <label asp-for="FromDate" class="form-label"></label>
+                <input asp-for="FromDate" type="date" class="form-control" />
+            </div>
+            <div class="col-sm-6 col-lg-2">
+                <label asp-for="ToDate" class="form-label"></label>
+                <input asp-for="ToDate" type="date" class="form-control" />
+            </div>
+            <div class="col-auto">
+                <div class="form-check">
+                    <input asp-for="DeletedOnly" class="form-check-input" />
+                    <label asp-for="DeletedOnly" class="form-check-label"></label>
+                </div>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">Preview</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+@if (Model.HasRun && Model.Report is { } report)
+{
+    <partial name="_ReportHeader"
+             model="@ReportHeaderViewModel.From(report, Url.Action("Audit")!,
+                       Context.Request.Query.ToDictionary(q => q.Key, q => q.Value.ToString()))" />
+    <div class="card">
+        <div class="sc-grid-wrapper">
+            <table class="table table-sm table-hover mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col">Document</th>
+                        <th scope="col">Date</th>
+                        <th scope="col">Created By</th>
+                        <th scope="col">Created</th>
+                        <th scope="col">Modified By</th>
+                        <th scope="col">Modified</th>
+                        <th scope="col">Deleted By</th>
+                        <th scope="col">Deleted</th>
+                        <th scope="col">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (report.IsEmpty)
+                    {
+                        <tr><td colspan="9" class="text-center text-body-secondary py-4">No Data found !</td></tr>
+                    }
+                    else
+                    {
+                        @foreach (var row in report.Rows)
+                        {
+                            <tr class="@(row.IsDeleted ? "table-warning" : "")">
+                                <td><code>@row.DocumentNumber</code></td>
+                                <td>@row.DocumentDate.ToString("dd-MMM-yyyy")</td>
+                                <td>@row.CreatedBy</td>
+                                <td class="text-body-secondary">@row.CreatedAt.ToString("dd-MMM-yy HH:mm")</td>
+                                <td>@row.ModifiedBy</td>
+                                <td class="text-body-secondary">@(row.ModifiedAt?.ToString("dd-MMM-yy HH:mm"))</td>
+                                <td>@row.DeletedBy</td>
+                                <td class="text-body-secondary">@(row.DeletedAt?.ToString("dd-MMM-yy HH:mm"))</td>
+                                <td>
+                                    @if (row.IsDeleted)
+                                    {
+                                        <span class="badge text-bg-danger">Deleted</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge text-bg-success">Active</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
