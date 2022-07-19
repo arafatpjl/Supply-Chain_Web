@@ -1,0 +1,160 @@
+@model BillRegisterViewModel
+@using SupplyChain.Application.Reports.Registers
+@using SupplyChain.Domain.Enums
+@{ ViewData["Title"] = "Bill Register"; }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h4 mb-0">Bill Register</h1>
+        <small class="text-body-secondary">
+            Replaces <code>rptBillDetailsCash.frm</code> and <code>rptBillDetailsCredit.frm</code>
+        </small>
+    </div>
+    <a class="btn btn-outline-secondary" asp-action="Index">All Reports</a>
+</div>
+
+<div class="alert alert-light border small d-flex align-items-start gap-2">
+    <span>ℹ️</span>
+    <div>
+        <strong>Sixteen Crystal files become one report.</strong> Eight filter modes, in a cash set
+        and a credit set, all running <code>SELECT * FROM vieBillDetails</code> with a different
+        column in the <code>WHERE</code> clause and a different <code>Status</code> literal.
+    </div>
+</div>
+
+<form method="get" asp-action="BillRegister" class="card mb-3">
+    <div class="card-body">
+        <input type="hidden" asp-for="HasRun" value="true" />
+        <div class="row g-3 align-items-end">
+            <div class="col-sm-6 col-lg-2">
+                <label asp-for="Mode" class="form-label"></label>
+                <select asp-for="Mode" class="form-select" onchange="this.form.submit()">
+                    @foreach (var mode in Enum.GetValues<BillRegisterMode>())
+                    {
+                        <option value="@mode" selected="@(mode == Model.Mode)">@mode</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-sm-6 col-lg-2">
+                <label asp-for="Kind" class="form-label"></label>
+                <select asp-for="Kind" class="form-select">
+                    <option value="">All</option>
+                    @foreach (var kind in Enum.GetValues<BillKind>())
+                    {
+                        <option value="@kind" selected="@(Model.Kind == kind)">@kind</option>
+                    }
+                </select>
+            </div>
+
+            @if (Model.UsesReference)
+            {
+                <div class="col-sm-6 col-lg-3">
+                    <label asp-for="Reference" class="form-label"></label>
+                    <input asp-for="Reference" class="form-control" autocomplete="off" />
+                </div>
+            }
+            @if (Model.UsesDateRange)
+            {
+                <div class="col-sm-6 col-lg-2">
+                    <label asp-for="FromDate" class="form-label"></label>
+                    <input asp-for="FromDate" type="date" class="form-control" />
+                </div>
+                <div class="col-sm-6 col-lg-2">
+                    <label asp-for="ToDate" class="form-label"></label>
+                    <input asp-for="ToDate" type="date" class="form-control" />
+                </div>
+            }
+            @if (Model.Mode == BillRegisterMode.Party)
+            {
+                <div class="col-sm-6 col-lg-3">
+                    <label asp-for="PartyId" class="form-label"></label>
+                    <select asp-for="PartyId" class="form-select">
+                        <option value="">— Select —</option>
+                        @foreach (var party in Model.Parties)
+                        {
+                            <option value="@party.Id" selected="@(party.Id == Model.PartyId)">@party.Name</option>
+                        }
+                    </select>
+                </div>
+            }
+            @if (Model.Mode == BillRegisterMode.AccountsHead)
+            {
+                <div class="col-sm-6 col-lg-3">
+                    <label asp-for="AccountsHeadId" class="form-label"></label>
+                    <select asp-for="AccountsHeadId" class="form-select">
+                        <option value="">— Select —</option>
+                        @foreach (var head in Model.AccountsHeads)
+                        {
+                            <option value="@head.Id" selected="@(head.Id == Model.AccountsHeadId)">@head.Name</option>
+                        }
+                    </select>
+                </div>
+            }
+
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">Preview</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+@if (Model.HasRun && Model.Report is { } report)
+{
+    <partial name="_ReportHeader"
+             model="@ReportHeaderViewModel.From(report, Url.Action("BillRegister")!,
+                       Context.Request.Query.ToDictionary(q => q.Key, q => q.Value.ToString()))" />
+    <div class="card">
+        <div class="sc-grid-wrapper">
+            <table class="table table-sm table-hover mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col">ID No</th>
+                        <th scope="col">ID Date</th>
+                        <th scope="col">Type</th>
+                        <th scope="col">Party</th>
+                        <th scope="col">Head</th>
+                        <th scope="col">Bill No</th>
+                        <th scope="col">Bill Date</th>
+                        <th scope="col">MRR No</th>
+                        <th scope="col">Remarks</th>
+                        <th scope="col" class="sc-numeric">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (report.IsEmpty)
+                    {
+                        <tr><td colspan="10" class="text-center text-body-secondary py-4">No Data found !</td></tr>
+                    }
+                    else
+                    {
+                        @foreach (var row in report.Rows)
+                        {
+                            <tr>
+                                <td><code>@row.IdentificationNo</code></td>
+                                <td>@row.IdentificationDate.ToString("dd-MMM-yyyy")</td>
+                                <td>@row.Kind</td>
+                                <td>@row.PartyName</td>
+                                <td class="text-body-secondary">@row.AccountsHeadName</td>
+                                <td>@row.BillNo</td>
+                                <td>@row.BillDate.ToString("dd-MMM-yyyy")</td>
+                                <td class="text-body-secondary">@row.MrrNo</td>
+                                <td class="text-body-secondary">@row.Remarks</td>
+                                <td class="sc-numeric">@row.Amount.ToString("N2")</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+                @if (!report.IsEmpty)
+                {
+                    <tfoot>
+                        <tr class="fw-semibold border-top">
+                            <td colspan="9" class="text-end">Total</td>
+                            <td class="sc-numeric">@report.Rows.Sum(r => r.Amount).ToString("N2")</td>
+                        </tr>
+                    </tfoot>
+                }
+            </table>
+        </div>
+    </div>
+}
