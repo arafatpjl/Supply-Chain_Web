@@ -1,0 +1,134 @@
+@model ChequeRegisterViewModel
+@using SupplyChain.Application.Reports.Registers
+@{ ViewData["Title"] = "Cheque Register"; }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h4 mb-0">Cheque Register</h1>
+        <small class="text-body-secondary">Replaces <code>frmrptChequeInfo.frm</code></small>
+    </div>
+    <a class="btn btn-outline-secondary" asp-action="Index">All Reports</a>
+</div>
+
+<form method="get" asp-action="ChequeRegister" class="card mb-3">
+    <div class="card-body">
+        <input type="hidden" asp-for="HasRun" value="true" />
+        <div class="row g-3 align-items-end">
+            <div class="col-sm-6 col-lg-2">
+                <label asp-for="Mode" class="form-label"></label>
+                <select asp-for="Mode" class="form-select" onchange="this.form.submit()">
+                    @foreach (var mode in Enum.GetValues<ChequeRegisterMode>())
+                    {
+                        <option value="@mode" selected="@(mode == Model.Mode)">@mode</option>
+                    }
+                </select>
+            </div>
+
+            @if (Model.Mode == ChequeRegisterMode.Book)
+            {
+                <div class="col-sm-6 col-lg-3">
+                    <label asp-for="ChequeBookId" class="form-label"></label>
+                    <select asp-for="ChequeBookId" class="form-select">
+                        <option value="">— Select —</option>
+                        @foreach (var book in Model.ChequeBooks)
+                        {
+                            <option value="@book.Id" selected="@(book.Id == Model.ChequeBookId)">@book.Name</option>
+                        }
+                    </select>
+                </div>
+            }
+            @if (Model.Mode == ChequeRegisterMode.Beneficiary)
+            {
+                <div class="col-sm-6 col-lg-3">
+                    <label asp-for="Beneficiary" class="form-label"></label>
+                    <input asp-for="Beneficiary" class="form-control" autocomplete="off" />
+                </div>
+            }
+
+            <div class="col-sm-6 col-lg-2">
+                <label asp-for="FromDate" class="form-label"></label>
+                <input asp-for="FromDate" type="date" class="form-control" />
+            </div>
+            <div class="col-sm-6 col-lg-2">
+                <label asp-for="ToDate" class="form-label"></label>
+                <input asp-for="ToDate" type="date" class="form-control" />
+            </div>
+
+            <div class="col-auto">
+                <div class="form-check">
+                    <input asp-for="OutstandingOnly" class="form-check-input" />
+                    <label asp-for="OutstandingOnly" class="form-check-label"></label>
+                </div>
+            </div>
+
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">Preview</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+@if (Model.HasRun && Model.Report is { } report)
+{
+    <partial name="_ReportHeader"
+             model="@ReportHeaderViewModel.From(report, Url.Action("ChequeRegister")!,
+                       Context.Request.Query.ToDictionary(q => q.Key, q => q.Value.ToString()))" />
+    <div class="card">
+        <div class="sc-grid-wrapper">
+            <table class="table table-sm table-hover mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col">Bank</th>
+                        <th scope="col">Book</th>
+                        <th scope="col">Cheque No</th>
+                        <th scope="col">Issue Date</th>
+                        <th scope="col">Beneficiary</th>
+                        <th scope="col">Particulars</th>
+                        <th scope="col">Honour Date</th>
+                        <th scope="col" class="sc-numeric">Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (report.IsEmpty)
+                    {
+                        <tr><td colspan="8" class="text-center text-body-secondary py-4">No Data found !</td></tr>
+                    }
+                    else
+                    {
+                        @foreach (var row in report.Rows)
+                        {
+                            <tr>
+                                <td>@row.BankName</td>
+                                <td class="text-body-secondary">@row.BookNo</td>
+                                <td><code>@row.ChequeNo</code></td>
+                                <td>@row.IssueDate.ToString("dd-MMM-yyyy")</td>
+                                <td>@row.Beneficiary</td>
+                                <td class="text-body-secondary">@row.PaymentParticulars</td>
+                                <td>
+                                    @if (row.EncashmentDate is { } date)
+                                    {
+                                        @date.ToString("dd-MMM-yyyy")
+                                    }
+                                    else
+                                    {
+                                        <span class="badge text-bg-secondary">Outstanding</span>
+                                    }
+                                </td>
+                                <td class="sc-numeric">@row.Value.ToString("N2")</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+                @if (!report.IsEmpty)
+                {
+                    <tfoot>
+                        <tr class="fw-semibold border-top">
+                            <td colspan="7" class="text-end">Total</td>
+                            <td class="sc-numeric">@report.Rows.Sum(r => r.Value).ToString("N2")</td>
+                        </tr>
+                    </tfoot>
+                }
+            </table>
+        </div>
+    </div>
+}
