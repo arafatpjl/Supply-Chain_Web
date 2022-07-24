@@ -1,0 +1,93 @@
+@{ ViewData["Title"] = "Reports"; }
+@using SupplyChain.Application.Reports.TransactionStatement
+
+<h1 class="h4 mb-1">Reports</h1>
+<p class="text-body-secondary">
+    Replaces the legacy Reports menu. Fifty-six Crystal report files are being consolidated into
+    roughly twenty parameterised reports &mdash; see <code>docs/05-Reporting-Strategy.md</code>.
+</p>
+
+<div class="row row-cols-1 row-cols-md-2 g-3 mt-1">
+    <div class="col">
+        <div class="card h-100">
+            <div class="card-header fw-semibold">Supply Chain</div>
+            <div class="list-group list-group-flush">
+                <a class="list-group-item list-group-item-action"
+                   asp-action="TransactionStatement" asp-route-mode="@StatementFilterMode.BillNo">
+                    Bill Wise Report
+                    <small class="d-block text-body-secondary">Statement lines for one bill number</small>
+                </a>
+                <a class="list-group-item list-group-item-action"
+                   asp-action="TransactionStatement" asp-route-mode="@StatementFilterMode.MrrNo">
+                    MRR Wise Report
+                    <small class="d-block text-body-secondary">Statement lines for one goods receipt</small>
+                </a>
+                <a class="list-group-item list-group-item-action"
+                   asp-action="TransactionStatement" asp-route-mode="@StatementFilterMode.ChallanNo">
+                    Challan Wise Report
+                    <small class="d-block text-body-secondary">Statement lines for one challan</small>
+                </a>
+                <a class="list-group-item list-group-item-action"
+                   asp-action="TransactionStatement" asp-route-mode="@StatementFilterMode.Transaction">
+                    Transaction Wise Report
+                    <small class="d-block text-body-secondary">By date range, type and statement number</small>
+                </a>
+                <a class="list-group-item list-group-item-action" asp-action="PartyStatement">
+                    Party Statement
+                    <small class="d-block text-body-secondary">Detail or summary, by party and period</small>
+                </a>
+                <a class="list-group-item list-group-item-action" asp-action="MonthlyStatement">
+                    Monthly Statement
+                    <small class="d-block text-body-secondary">Totals by month and transaction type</small>
+                </a>
+                <a class="list-group-item list-group-item-action" asp-action="PurchaseOrderRegister">
+                    Purchase Order Register
+                    <small class="d-block text-body-secondary">By order, supplier or item type</small>
+                </a>
+                <a class="list-group-item list-group-item-action" asp-action="MrrRegister">
+                    Goods Receipt Register
+                    <small class="d-block text-body-secondary">Six filter modes, MRR or challan</small>
+                </a>
+                <a class="list-group-item list-group-item-action" asp-action="ItemMovement">
+                    Item Movement
+                    <small class="d-block text-body-secondary">Ordered against received, per item</small>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="card h-100">
+            <div class="card-header fw-semibold">Accounts &amp; Store</div>
+            <div class="list-group list-group-flush">
+                <a class="list-group-item list-group-item-action" asp-action="BillRegister">
+                    Bill Register
+                    <small class="d-block text-body-secondary">Eight filter modes, cash or credit</small>
+                </a>
+                <a class="list-group-item list-group-item-action" asp-action="ChequeRegister">
+                    Cheque Register
+                    <small class="d-block text-body-secondary">By book, issue date or beneficiary</small>
+                </a>
+                <a class="list-group-item list-group-item-action" asp-controller="Mrrs" asp-action="Balance">
+                    PO &amp; MRR Balance Qty
+                    <small class="d-block text-body-secondary">Ordered against received</small>
+                </a>
+                <a class="list-group-item list-group-item-action" asp-action="Audit">
+                    Audit Report
+                    <small class="d-block text-body-secondary">Who created, changed or deleted a document</small>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-light border small mt-3 d-flex align-items-start gap-2">
+    <span>ℹ️</span>
+    <div>
+        <strong>Fifty-six Crystal report files become eleven parameterised reports.</strong> The
+        legacy system needed one <code>.rpt</code> per filter combination and per currency; a
+        modern report takes its parameters at runtime. The Bill Register alone replaces sixteen
+        files; the Purchase Order Register replaces thirteen. Every report family turned out to be
+        one query with parameters. See <code>docs/05-Reporting-Strategy.md</code> §6.
+    </div>
+</div>
