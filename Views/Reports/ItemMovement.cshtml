@@ -1,0 +1,120 @@
+@model ItemMovementViewModel
+@using SupplyChain.Application.Reports.Registers
+@{ ViewData["Title"] = "Item Movement"; }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h4 mb-0">Item Movement</h1>
+        <small class="text-body-secondary">Replaces <code>FrmItemName.frm</code> &mdash; five Crystal files</small>
+    </div>
+    <a class="btn btn-outline-secondary" asp-action="Index">All Reports</a>
+</div>
+
+<form method="get" asp-action="ItemMovement" class="card mb-3">
+    <div class="card-body">
+        <input type="hidden" asp-for="HasRun" value="true" />
+        <div class="row g-3 align-items-end">
+            <div class="col-sm-6 col-lg-3">
+                <label asp-for="Subject" class="form-label"></label>
+                <select asp-for="Subject" class="form-select">
+                    @foreach (var subject in Enum.GetValues<ItemMovementSubject>())
+                    {
+                        <option value="@subject" selected="@(subject == Model.Subject)">@subject</option>
+                    }
+                </select>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <label asp-for="ItemId" class="form-label"></label>
+                <select asp-for="ItemId" class="form-select">
+                    <option value="">All items</option>
+                    @foreach (var i in Model.Items)
+                    {
+                        <option value="@i.Id" selected="@(i.Id == Model.ItemId)">@i.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-sm-6 col-lg-2">
+                <label asp-for="FromDate" class="form-label"></label>
+                <input asp-for="FromDate" type="date" class="form-control" />
+            </div>
+            <div class="col-sm-6 col-lg-2">
+                <label asp-for="ToDate" class="form-label"></label>
+                <input asp-for="ToDate" type="date" class="form-control" />
+            </div>
+            @if (Model.CanRunAllCompanies)
+            {
+                <div class="col-auto">
+                    <div class="form-check">
+                        <input asp-for="AllCompanies" class="form-check-input" />
+                        <label asp-for="AllCompanies" class="form-check-label"></label>
+                    </div>
+                </div>
+            }
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">Preview</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+@if (Model.HasRun && Model.Report is { } report)
+{
+    <partial name="_ReportHeader"
+             model="@ReportHeaderViewModel.From(report, Url.Action("ItemMovement")!,
+                       Context.Request.Query.ToDictionary(q => q.Key, q => q.Value.ToString()))" />
+    <div class="card">
+        <div class="sc-grid-wrapper">
+            <table class="table table-sm table-hover mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col">Company</th>
+                        <th scope="col">Type</th>
+                        <th scope="col">Item</th>
+                        <th scope="col" class="sc-numeric">Ordered</th>
+                        <th scope="col" class="sc-numeric">Received</th>
+                        <th scope="col" class="sc-numeric">Outstanding</th>
+                        <th scope="col" class="sc-numeric">Ordered Value</th>
+                        <th scope="col" class="sc-numeric">Received Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (report.IsEmpty)
+                    {
+                        <tr><td colspan="8" class="text-center text-body-secondary py-4">No Data found !</td></tr>
+                    }
+                    else
+                    {
+                        @foreach (var r in report.Rows)
+                        {
+                            <tr>
+                                <td>@r.CompanyName</td>
+                                <td class="text-body-secondary">@r.ItemTypeName</td>
+                                <td>@r.ItemName</td>
+                                <td class="sc-numeric">@r.OrderedQty.ToString("N2")</td>
+                                <td class="sc-numeric">@r.ReceivedQty.ToString("N2")</td>
+                                <td class="sc-numeric @(r.OutstandingQty < 0 ? "text-danger fw-semibold" : "")">
+                                    @r.OutstandingQty.ToString("N2")
+                                </td>
+                                <td class="sc-numeric">@r.OrderedValue.ToString("N2")</td>
+                                <td class="sc-numeric">@r.ReceivedValue.ToString("N2")</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+                @if (!report.IsEmpty)
+                {
+                    <tfoot>
+                        <tr class="fw-semibold border-top">
+                            <td colspan="3" class="text-end">Total</td>
+                            <td class="sc-numeric">@report.Rows.Sum(r => r.OrderedQty).ToString("N2")</td>
+                            <td class="sc-numeric">@report.Rows.Sum(r => r.ReceivedQty).ToString("N2")</td>
+                            <td class="sc-numeric">@report.Rows.Sum(r => r.OutstandingQty).ToString("N2")</td>
+                            <td class="sc-numeric">@report.Rows.Sum(r => r.OrderedValue).ToString("N2")</td>
+                            <td class="sc-numeric">@report.Rows.Sum(r => r.ReceivedValue).ToString("N2")</td>
+                        </tr>
+                    </tfoot>
+                }
+            </table>
+        </div>
+    </div>
+}
