@@ -1,0 +1,114 @@
+@model MonthlyStatementViewModel
+@using SupplyChain.Domain.Enums
+@using SupplyChain.Web.Reporting
+@{ ViewData["Title"] = "Monthly Statement"; }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h4 mb-0">Monthly Statement</h1>
+        <small class="text-body-secondary">Replaces <code>frmrptMonthlyStatement.frm</code></small>
+    </div>
+    <a class="btn btn-outline-secondary" asp-action="Index">All Reports</a>
+</div>
+
+@* The legacy view definition was unavailable, so the grouping is inferred. Saying so on the
+   screen is more useful than discovering it during reconciliation. *@
+<div class="alert alert-warning border small d-flex align-items-start gap-2">
+    <span>⚠️</span>
+    <div>
+        The legacy report read a view called <code>viewMonthlyStatement</code> whose definition is
+        not in the source tree. The grouping here &mdash; by month and transaction type &mdash; is
+        inferred from the form's filters and must be reconciled against live output before cutover.
+    </div>
+</div>
+
+<form method="get" asp-action="MonthlyStatement" class="card mb-3">
+    <div class="card-body">
+        <input type="hidden" asp-for="HasRun" value="true" />
+
+        <div class="row g-3 align-items-end">
+            <div class="col-sm-4 col-lg-2">
+                <label asp-for="Year" class="form-label"></label>
+                <input asp-for="Year" type="number" class="form-control" min="1990" max="2100" />
+            </div>
+
+            <div class="col-sm-6 col-lg-3">
+                <label asp-for="Type" class="form-label"></label>
+                <select asp-for="Type" class="form-select">
+                    <option value="">All Type</option>
+                    @foreach (var type in Enum.GetValues<TransactionType>())
+                    {
+                        <option value="@type" selected="@(Model.Type == type)">
+                            @TransactionStatementColumns.Describe(type)
+                        </option>
+                    }
+                </select>
+            </div>
+
+            @if (Model.CanRunAllCompanies)
+            {
+                <div class="col-auto">
+                    <div class="form-check">
+                        <input asp-for="AllCompanies" class="form-check-input" />
+                        <label asp-for="AllCompanies" class="form-check-label"></label>
+                    </div>
+                </div>
+            }
+
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">Preview</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+@if (Model.HasRun && Model.Report is { } report)
+{
+    <partial name="_ReportHeader"
+             model="@ReportHeaderViewModel.From(report, Url.Action("MonthlyStatement")!,
+                       Context.Request.Query.ToDictionary(q => q.Key, q => q.Value.ToString()))" />
+    <div class="card">
+        <div class="sc-grid-wrapper">
+            <table class="table table-sm table-hover mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col">Company</th>
+                        <th scope="col">Month</th>
+                        <th scope="col">Type</th>
+                        <th scope="col" class="sc-numeric">Entries</th>
+                        <th scope="col" class="sc-numeric">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (report.IsEmpty)
+                    {
+                        <tr><td colspan="5" class="text-center text-body-secondary py-4">No Data found !</td></tr>
+                    }
+                    else
+                    {
+                        @foreach (var row in report.Rows)
+                        {
+                            <tr>
+                                <td>@row.CompanyName</td>
+                                <td>@row.MonthName @row.Year</td>
+                                <td>@TransactionStatementColumns.Describe(row.Type)</td>
+                                <td class="sc-numeric">@row.EntryCount</td>
+                                <td class="sc-numeric">@row.Amount.ToString("N2")</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+                @if (!report.IsEmpty)
+                {
+                    <tfoot>
+                        <tr class="fw-semibold border-top">
+                            <td colspan="3" class="text-end">Total</td>
+                            <td class="sc-numeric">@report.Rows.Sum(r => r.EntryCount)</td>
+                            <td class="sc-numeric">@report.Rows.Sum(r => r.Amount).ToString("N2")</td>
+                        </tr>
+                    </tfoot>
+                }
+            </table>
+        </div>
+    </div>
+}
