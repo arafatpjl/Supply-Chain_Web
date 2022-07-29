@@ -1,0 +1,146 @@
+@model MrrRegisterViewModel
+@using SupplyChain.Application.Reports.Registers
+@{ ViewData["Title"] = "Goods Receipt Register"; }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h4 mb-0">Goods Receipt Register</h1>
+        <small class="text-body-secondary">Replaces <code>frmrptMrrChallan.frm</code> &mdash; twelve Crystal files</small>
+    </div>
+    <a class="btn btn-outline-secondary" asp-action="Index">All Reports</a>
+</div>
+
+<div class="alert alert-light border small d-flex align-items-start gap-2">
+    <span>ℹ️</span>
+    <div>
+        Six filter modes times two currencies gave twelve files. The currency dimension disappeared
+        when the two goods receipt tables were merged &mdash; they had no currency-handling
+        difference to begin with.
+    </div>
+</div>
+
+<form method="get" asp-action="MrrRegister" class="card mb-3">
+    <div class="card-body">
+        <input type="hidden" asp-for="HasRun" value="true" />
+        <div class="row g-3 align-items-end">
+            <div class="col-sm-6 col-lg-3">
+                <label asp-for="Mode" class="form-label"></label>
+                <select asp-for="Mode" class="form-select" onchange="this.form.submit()">
+                    @foreach (var mode in Enum.GetValues<MrrRegisterMode>())
+                    {
+                        <option value="@mode" selected="@(mode == Model.Mode)">@mode</option>
+                    }
+                </select>
+            </div>
+
+            @if (Model.UsesReference)
+            {
+                <div class="col-sm-6 col-lg-3">
+                    <label asp-for="Reference" class="form-label"></label>
+                    <input asp-for="Reference" class="form-control" autocomplete="off" />
+                </div>
+            }
+            @if (Model.UsesSupplier)
+            {
+                <div class="col-sm-6 col-lg-3">
+                    <label asp-for="SupplierId" class="form-label"></label>
+                    <select asp-for="SupplierId" class="form-select">
+                        <option value="">— Select —</option>
+                        @foreach (var s in Model.Suppliers)
+                        {
+                            <option value="@s.Id" selected="@(s.Id == Model.SupplierId)">@s.Name</option>
+                        }
+                    </select>
+                </div>
+            }
+            @if (Model.Mode == MrrRegisterMode.SupplierAndItem)
+            {
+                <div class="col-sm-6 col-lg-3">
+                    <label asp-for="ItemId" class="form-label"></label>
+                    <select asp-for="ItemId" class="form-select">
+                        <option value="">— Select —</option>
+                        @foreach (var i in Model.Items)
+                        {
+                            <option value="@i.Id" selected="@(i.Id == Model.ItemId)">@i.Name</option>
+                        }
+                    </select>
+                </div>
+            }
+            @if (Model.UsesDateRange)
+            {
+                <div class="col-sm-6 col-lg-2">
+                    <label asp-for="FromDate" class="form-label"></label>
+                    <input asp-for="FromDate" type="date" class="form-control" />
+                </div>
+                <div class="col-sm-6 col-lg-2">
+                    <label asp-for="ToDate" class="form-label"></label>
+                    <input asp-for="ToDate" type="date" class="form-control" />
+                </div>
+            }
+
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">Preview</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+@if (Model.HasRun && Model.Report is { } report)
+{
+    <partial name="_ReportHeader"
+             model="@ReportHeaderViewModel.From(report, Url.Action("MrrRegister")!,
+                       Context.Request.Query.ToDictionary(q => q.Key, q => q.Value.ToString()))" />
+    <div class="card">
+        <div class="sc-grid-wrapper">
+            <table class="table table-sm table-hover mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col">MRR No</th>
+                        <th scope="col">MRR Date</th>
+                        <th scope="col">Supplier</th>
+                        <th scope="col">Challan</th>
+                        <th scope="col">Item</th>
+                        <th scope="col">PR No.</th>
+                        <th scope="col" class="sc-numeric">Ordered</th>
+                        <th scope="col" class="sc-numeric">Received</th>
+                        <th scope="col" class="sc-numeric">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (report.IsEmpty)
+                    {
+                        <tr><td colspan="9" class="text-center text-body-secondary py-4">No Data found !</td></tr>
+                    }
+                    else
+                    {
+                        @foreach (var r in report.Rows)
+                        {
+                            <tr>
+                                <td><code>@r.MrrNumber</code></td>
+                                <td>@r.ReceiptDate.ToString("dd-MMM-yyyy")</td>
+                                <td>@r.SupplierName</td>
+                                <td class="text-body-secondary">@r.ChallanNo @r.ChallanDate.ToString("dd-MMM-yy")</td>
+                                <td>@r.ItemName</td>
+                                <td>@r.PrNo</td>
+                                <td class="sc-numeric">@r.OrderedQty.ToString("N2")</td>
+                                <td class="sc-numeric">@r.ReceivedQty.ToString("N2")</td>
+                                <td class="sc-numeric">@r.LineTotal.ToString("N2")</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+                @if (!report.IsEmpty)
+                {
+                    <tfoot>
+                        <tr class="fw-semibold border-top">
+                            <td colspan="6" class="text-end">Total</td>
+                            <td class="sc-numeric">@report.Rows.Sum(r => r.OrderedQty).ToString("N2")</td>
+                            <td class="sc-numeric">@report.Rows.Sum(r => r.ReceivedQty).ToString("N2")</td>
+                            <td class="sc-numeric">@report.Rows.Sum(r => r.LineTotal).ToString("N2")</td>
+                        </tr>
+                    </tfoot>
+                }
+            </table>
+        </div>
+    </div>
+}
