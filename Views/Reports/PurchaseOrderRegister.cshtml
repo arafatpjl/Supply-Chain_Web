@@ -1,0 +1,142 @@
+@model PurchaseOrderRegisterViewModel
+@using SupplyChain.Application.Reports.Registers
+@{ ViewData["Title"] = "Purchase Order Register"; }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h4 mb-0">Purchase Order Register</h1>
+        <small class="text-body-secondary">Replaces <code>frmRptProInvoice.frm</code> &mdash; thirteen Crystal files</small>
+    </div>
+    <a class="btn btn-outline-secondary" asp-action="Index">All Reports</a>
+</div>
+
+<form method="get" asp-action="PurchaseOrderRegister" class="card mb-3">
+    <div class="card-body">
+        <input type="hidden" asp-for="HasRun" value="true" />
+        <div class="row g-3 align-items-end">
+            <div class="col-sm-6 col-lg-2">
+                <label asp-for="Mode" class="form-label"></label>
+                <select asp-for="Mode" class="form-select" onchange="this.form.submit()">
+                    @foreach (var mode in Enum.GetValues<PurchaseOrderRegisterMode>())
+                    {
+                        <option value="@mode" selected="@(mode == Model.Mode)">@mode</option>
+                    }
+                </select>
+            </div>
+
+            @if (Model.Mode == PurchaseOrderRegisterMode.Order)
+            {
+                <div class="col-sm-6 col-lg-3">
+                    <label asp-for="PurchaseOrderId" class="form-label"></label>
+                    <select asp-for="PurchaseOrderId" class="form-select">
+                        <option value="">— Select —</option>
+                        @foreach (var o in Model.PurchaseOrders)
+                        {
+                            <option value="@o.Id" selected="@(o.Id == Model.PurchaseOrderId)">@o.Name</option>
+                        }
+                    </select>
+                </div>
+            }
+            @if (Model.Mode == PurchaseOrderRegisterMode.Supplier)
+            {
+                <div class="col-sm-6 col-lg-3">
+                    <label asp-for="SupplierId" class="form-label"></label>
+                    <select asp-for="SupplierId" class="form-select">
+                        <option value="">— Select —</option>
+                        @foreach (var s in Model.Suppliers)
+                        {
+                            <option value="@s.Id" selected="@(s.Id == Model.SupplierId)">@s.Name</option>
+                        }
+                    </select>
+                </div>
+            }
+            @if (Model.Mode == PurchaseOrderRegisterMode.ItemType)
+            {
+                <div class="col-sm-6 col-lg-3">
+                    <label asp-for="ItemTypeId" class="form-label"></label>
+                    <select asp-for="ItemTypeId" class="form-select">
+                        <option value="">— Select —</option>
+                        @foreach (var t in Model.ItemTypes)
+                        {
+                            <option value="@t.Id" selected="@(t.Id == Model.ItemTypeId)">@t.Name</option>
+                        }
+                    </select>
+                </div>
+            }
+
+            <div class="col-sm-6 col-lg-2">
+                <label asp-for="FromDate" class="form-label"></label>
+                <input asp-for="FromDate" type="date" class="form-control" />
+            </div>
+            <div class="col-sm-6 col-lg-2">
+                <label asp-for="ToDate" class="form-label"></label>
+                <input asp-for="ToDate" type="date" class="form-control" />
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">Preview</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+@if (Model.HasRun && Model.Report is { } report)
+{
+    <partial name="_ReportHeader"
+             model="@ReportHeaderViewModel.From(report, Url.Action("PurchaseOrderRegister")!,
+                       Context.Request.Query.ToDictionary(q => q.Key, q => q.Value.ToString()))" />
+    <div class="card">
+        <div class="sc-grid-wrapper">
+            <table class="table table-sm table-hover mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col">P.O. No</th>
+                        <th scope="col">P.O. Date</th>
+                        <th scope="col">Supplier</th>
+                        <th scope="col">Item</th>
+                        <th scope="col">Type</th>
+                        <th scope="col">PR No.</th>
+                        <th scope="col" class="sc-numeric">Qty</th>
+                        <th scope="col">Unit</th>
+                        <th scope="col" class="sc-numeric">Unit Price</th>
+                        <th scope="col" class="sc-numeric">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (report.IsEmpty)
+                    {
+                        <tr><td colspan="10" class="text-center text-body-secondary py-4">No Data found !</td></tr>
+                    }
+                    else
+                    {
+                        @foreach (var r in report.Rows)
+                        {
+                            <tr>
+                                <td><code>@r.OrderNumber</code></td>
+                                <td>@r.OrderDate.ToString("dd-MMM-yyyy")</td>
+                                <td>@r.SupplierName</td>
+                                <td>@r.ItemName</td>
+                                <td class="text-body-secondary">@r.ItemTypeName</td>
+                                <td>@r.PrNo</td>
+                                <td class="sc-numeric">@r.Quantity.ToString("N2")</td>
+                                <td>@r.QtyUnit</td>
+                                <td class="sc-numeric">@r.UnitPrice.ToString("N2")</td>
+                                <td class="sc-numeric">@r.LineTotal.ToString("N2")</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+                @if (!report.IsEmpty)
+                {
+                    <tfoot>
+                        <tr class="fw-semibold border-top">
+                            <td colspan="6" class="text-end">Total</td>
+                            <td class="sc-numeric">@report.Rows.Sum(r => r.Quantity).ToString("N2")</td>
+                            <td colspan="2"></td>
+                            <td class="sc-numeric">@report.Rows.Sum(r => r.LineTotal).ToString("N2")</td>
+                        </tr>
+                    </tfoot>
+                }
+            </table>
+        </div>
+    </div>
+}
