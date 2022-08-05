@@ -1,0 +1,150 @@
+@model TransactionStatementViewModel
+@using SupplyChain.Domain.Enums
+@using SupplyChain.Web.Reporting
+@{ ViewData["Title"] = Model.Title; }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h4 mb-0">@Model.Title</h1>
+        <small class="text-body-secondary">Replaces <code>@Model.LegacyForm</code></small>
+    </div>
+    <a class="btn btn-outline-secondary" asp-action="Index">All Reports</a>
+</div>
+
+@* Filters are GET-bound so a report URL can be bookmarked and shared. *@
+<form method="get" asp-action="TransactionStatement" class="card mb-3">
+    <div class="card-body">
+        <input type="hidden" asp-for="Mode" />
+        <input type="hidden" asp-for="HasRun" value="true" />
+
+        <div class="row g-3 align-items-end">
+            @if (Model.UsesReference)
+            {
+                <div class="col-sm-4 col-lg-3">
+                    <label asp-for="Reference" class="form-label">@Model.ReferenceLabel</label>
+                    <input asp-for="Reference" class="form-control" autofocus autocomplete="off" />
+                </div>
+            }
+            else
+            {
+                <div class="col-sm-6 col-lg-3">
+                    <label asp-for="FromDate" class="form-label"></label>
+                    <input asp-for="FromDate" type="date" class="form-control" />
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <label asp-for="ToDate" class="form-label"></label>
+                    <input asp-for="ToDate" type="date" class="form-control" />
+                </div>
+                <div class="col-sm-6 col-lg-2">
+                    <label asp-for="StatementNo" class="form-label"></label>
+                    <input asp-for="StatementNo" type="number" class="form-control" min="1" />
+                </div>
+            }
+
+            <div class="col-sm-6 col-lg-2">
+                <label asp-for="Type" class="form-label"></label>
+                <select asp-for="Type" class="form-select">
+                    <option value="">All Type</option>
+                    @foreach (var type in Enum.GetValues<TransactionType>())
+                    {
+                        <option value="@type" selected="@(Model.Type == type)">
+                            @TransactionStatementColumns.Describe(type)
+                        </option>
+                    }
+                </select>
+            </div>
+
+            @if (Model.CanRunAllCompanies)
+            {
+                <div class="col-auto">
+                    <div class="form-check">
+                        <input asp-for="AllCompanies" class="form-check-input" />
+                        <label asp-for="AllCompanies" class="form-check-label"></label>
+                    </div>
+                </div>
+            }
+
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">Preview</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+@if (Model.HasRun && Model.Report is { } report)
+{
+    <partial name="_ReportHeader"
+             model="@ReportHeaderViewModel.From(report, Url.Action("TransactionStatement")!,
+                       Context.Request.Query.ToDictionary(q => q.Key, q => q.Value.ToString()))" />
+    <div class="card">
+        <div class="sc-grid-wrapper">
+            <table class="table table-sm table-hover mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col" class="sc-numeric">Stmt No</th>
+                        <th scope="col" class="sc-numeric">Tr No</th>
+                        <th scope="col">Type</th>
+                        <th scope="col">Tran Date</th>
+                        @if (Model.AllCompanies)
+                        {
+                            <th scope="col">Company</th>
+                        }
+                        <th scope="col">Party</th>
+                        <th scope="col">Bill No</th>
+                        <th scope="col">Bill Date</th>
+                        <th scope="col">MRR No</th>
+                        <th scope="col">MRR Date</th>
+                        <th scope="col">Challan No</th>
+                        <th scope="col">Challan Date</th>
+                        <th scope="col">Remark</th>
+                        <th scope="col" class="sc-numeric">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (report.IsEmpty)
+                    {
+                        @* The legacy forms said exactly this. *@
+                        <tr>
+                            <td colspan="14" class="text-center text-body-secondary py-4">No Data found !</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var row in report.Rows)
+                        {
+                            <tr>
+                                <td class="sc-numeric">@row.StatementNo</td>
+                                <td class="sc-numeric">@row.TransactionNo</td>
+                                <td>@TransactionStatementColumns.Describe(row.Type)</td>
+                                <td>@row.TransactionDate.ToString("dd-MMM-yyyy")</td>
+                                @if (Model.AllCompanies)
+                                {
+                                    <td>@row.CompanyName</td>
+                                }
+                                <td>@(row.PartyName ?? row.SupplierName)</td>
+                                <td>@row.BillNo</td>
+                                <td>@(row.BillDate?.ToString("dd-MMM-yyyy"))</td>
+                                <td>@row.MrrNo</td>
+                                <td>@(row.MrrDate?.ToString("dd-MMM-yyyy"))</td>
+                                <td>@row.ChallanNo</td>
+                                <td>@(row.ChallanDate?.ToString("dd-MMM-yyyy"))</td>
+                                <td>@row.Remark</td>
+                                <td class="sc-numeric">@row.Amount.ToString("N2")</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+                @if (!report.IsEmpty)
+                {
+                    <tfoot>
+                        <tr class="fw-semibold border-top">
+                            <td colspan="@(Model.AllCompanies ? 13 : 12)" class="text-end">Total</td>
+                            <td class="sc-numeric">@report.Rows.Sum(r => r.Amount).ToString("N2")</td>
+                        </tr>
+                    </tfoot>
+                }
+            </table>
+        </div>
+
+    </div>
+}
